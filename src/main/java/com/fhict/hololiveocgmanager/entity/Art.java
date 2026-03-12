@@ -1,4 +1,4 @@
-package com.fhict.hololiveocgmanager.elements;
+package com.fhict.hololiveocgmanager.entity;
 
 import jakarta.persistence.*;
 
