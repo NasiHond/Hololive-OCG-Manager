@@ -1,12 +1,20 @@
 package com.fhict.hololiveocgmanager.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
-@Table(name = "cardkeywords")
-public class Cardkeyword {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(name = "cardarts")
+public class CardartEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -15,12 +23,12 @@ public class Cardkeyword {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
     @JoinColumn(name = "cardid", nullable = false)
-    private Card cardid;
+    private CardEntity cardid;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "keywordid", nullable = false)
-    private Keyword keywordid;
+    @JoinColumn(name = "artid", nullable = false)
+    private ArtEntity artid;
 
     public Integer getId() {
         return id;
@@ -30,20 +38,20 @@ public class Cardkeyword {
         this.id = id;
     }
 
-    public Card getCardid() {
+    public CardEntity getCardid() {
         return cardid;
     }
 
-    public void setCardid(Card cardid) {
+    public void setCardid(CardEntity cardid) {
         this.cardid = cardid;
     }
 
-    public Keyword getKeywordid() {
-        return keywordid;
+    public ArtEntity getArtid() {
+        return artid;
     }
 
-    public void setKeywordid(Keyword keywordid) {
-        this.keywordid = keywordid;
+    public void setArtid(ArtEntity artid) {
+        this.artid = artid;
     }
 
 }
