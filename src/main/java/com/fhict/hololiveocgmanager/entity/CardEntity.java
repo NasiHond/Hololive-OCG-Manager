@@ -1,12 +1,20 @@
 package com.fhict.hololiveocgmanager.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "cards")
-public class Card {
+public class CardEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -21,10 +29,12 @@ public class Card {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
     @JoinColumn(name = "cardtype", nullable = false, referencedColumnName = "name")
-    private Cardtype cardtype;
+    private CardtypeEntity cardtype;
 
-    @Column(name = "cardcolour", nullable = false, length = Integer.MAX_VALUE)
-    private String cardcolour;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action =  OnDeleteAction.RESTRICT)
+    @JoinColumn(name = "card_colour_id", nullable = false, referencedColumnName = "id")
+    private ColourEntity cardcolour;
 
     @Column(name = "batonpass", nullable = false, length = Integer.MAX_VALUE)
     private String batonpass;
@@ -37,9 +47,6 @@ public class Card {
 
     @Column(name = "hp", nullable = false)
     private Integer hp;
-
-    @Column(name = "isbuzz", nullable = false)
-    private Boolean isbuzz;
 
     @Column(name = "rarity", nullable = false, length = Integer.MAX_VALUE)
     private String rarity;
@@ -68,19 +75,19 @@ public class Card {
         this.cardset = cardset;
     }
 
-    public Cardtype getCardtype() {
+    public CardtypeEntity getCardtype() {
         return cardtype;
     }
 
-    public void setCardtype(Cardtype cardtype) {
+    public void setCardtype(CardtypeEntity cardtype) {
         this.cardtype = cardtype;
     }
 
-    public String getCardcolour() {
-        return cardcolour;
+    public String getCardcolourID() {
+        return getCardcolourID();
     }
 
-    public void setCardcolour(String cardcolour) {
+    public void setCardcolour(ColourEntity cardcolour) {
         this.cardcolour = cardcolour;
     }
 
@@ -114,14 +121,6 @@ public class Card {
 
     public void setHp(Integer hp) {
         this.hp = hp;
-    }
-
-    public Boolean getIsbuzz() {
-        return isbuzz;
-    }
-
-    public void setIsbuzz(Boolean isbuzz) {
-        this.isbuzz = isbuzz;
     }
 
     public String getRarity() {

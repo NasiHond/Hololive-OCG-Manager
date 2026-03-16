@@ -1,12 +1,20 @@
 package com.fhict.hololiveocgmanager.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "cardtags")
-public class Cardtag {
+public class CardtagEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -15,11 +23,11 @@ public class Cardtag {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
     @JoinColumn(name = "cardid", nullable = false)
-    private Card cardid;
+    private CardEntity cardid;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tagid", nullable = false)
-    private Tag tagid;
+    private TagEntity tagid;
 
     public Integer getId() {
         return id;
@@ -29,19 +37,19 @@ public class Cardtag {
         this.id = id;
     }
 
-    public Card getCardid() {
+    public CardEntity getCardid() {
         return cardid;
     }
 
-    public void setCardid(Card cardid) {
+    public void setCardid(CardEntity cardid) {
         this.cardid = cardid;
     }
 
-    public Tag getTagid() {
+    public TagEntity getTagid() {
         return tagid;
     }
 
-    public void setTagid(Tag tagid) {
+    public void setTagid(TagEntity tagid) {
         this.tagid = tagid;
     }
 
