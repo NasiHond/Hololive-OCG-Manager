@@ -24,4 +24,7 @@ public class Card {
     private Integer hp;
     private Boolean isBuzz;
     private String rarity;
+    private String imageURL;
+    private Integer extraID;
+    private String extraEffect;
 }

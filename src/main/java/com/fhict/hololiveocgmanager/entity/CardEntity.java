@@ -51,6 +51,13 @@ public class CardEntity {
     @Column(name = "rarity", nullable = false, length = Integer.MAX_VALUE)
     private String rarity;
 
+    @Column(name = "image", length = Integer.MAX_VALUE)
+    private String image;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "extra_id")
+    private ExtraEntity extra;
+
     public Integer getId() {
         return id;
     }
