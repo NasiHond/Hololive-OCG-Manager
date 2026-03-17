@@ -218,7 +218,9 @@ public class CardScraperService {
             return;
         }
 
-        if (cardRepository.findByCardidAndCardsetIgnoreCase(normalizedCardId, cardSet).isPresent()) {
+        String normalizedRarity = normalizeText(rarity);
+
+        if (cardRepository.findByCardidIgnoreCaseAndCardsetIgnoreCaseAndRarityIgnoreCase(normalizedCardId, cardSet, normalizedRarity).isPresent()) {
             LOGGER.info("Card already exists in DB ({} / {}), skipping persist.", cardSet, normalizedCardId);
             return;
         }
@@ -253,7 +255,7 @@ public class CardScraperService {
         cardEntity.setHolomem(normalizeText(holomem));
         cardEntity.setBloomlvl(normalizeText(bloomlvl));
         cardEntity.setHp(hpValue);
-        cardEntity.setRarity(normalizeText(rarity));
+        cardEntity.setRarity(normalizedRarity);
         cardEntity.setImage(normalizeText(image));
         cardEntity.setExtra(resolvedExtra);
 
