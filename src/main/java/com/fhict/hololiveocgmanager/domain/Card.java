@@ -13,7 +13,7 @@ import lombok.Setter;
 @Builder(toBuilder = true)
 public class Card {
     private Integer ID;
-    private Integer cardID;
+    private String cardID;
     private String cardset;
     private Integer cardTypeID;
     private String cardTypeName;
