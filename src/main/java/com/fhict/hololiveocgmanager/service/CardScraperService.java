@@ -32,8 +32,7 @@ public class CardScraperService {
     private static final Pattern CRIT_TOKEN_PATTERN = Pattern.compile("^(赤|黄|青|紫|緑|白|青赤|白緑)\\s*[+＋]\\s*(\\d+)\\s*$");
 
     /**
-     * Cost icons use kanji in the <img alt="...">.
-     * We normalize them into stable keys you can store and render from.
+     * Normalising kanji colour icons into stable keys to store and render.
      */
     private static final Map<String, String> COST_TOKEN_TO_COLOUR_KEY = Map.of(
             "赤", "red",
@@ -564,7 +563,7 @@ public class CardScraperService {
     }
 
     /**
-     * Extract each cost icon as a discrete token (one <img alt="..."> == one token).
+     * Extract each cost icon as a token.
      * Example: "◇" -> ["◇"], "R R B" -> ["R", "R", "B"].
      */
     private List<String> extractArtCostTokens(Element artHeader) {

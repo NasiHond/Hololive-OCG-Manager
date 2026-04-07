@@ -115,6 +115,4 @@ public class CardServiceImpl implements CardService
 
         cardEntity.setCardcolour(resolvedColour);
     }
-
-
 }
