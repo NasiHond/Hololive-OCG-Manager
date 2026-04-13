@@ -20,8 +20,15 @@ jobs:
           java-version: '25'
           cache: gradle
 
-      - name: Build and test with Gradle
-        run: ./gradlew build --no-daemon ./gradlew test --no-daemon --stacktrace
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Run tests
+        run: ./gradlew test --no-daemon --stacktrace
+
+      - name: Build artifact
+        run: ./gradlew build -x test --no-daemon --stacktrace
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
