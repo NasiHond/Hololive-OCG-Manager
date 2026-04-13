@@ -1,7 +1,17 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.flywaydb:flyway-database-postgresql:12.3.0"
+    }
+}
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '4.0.3'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.flywaydb.flyway' version '12.3.0'
 }
 
 group = 'com.fhict'
@@ -18,19 +28,56 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
 dependencies {
-    implementation 'org.jsoup:jsoup:1.22.1'
-    implementation("org.flywaydb:flyway-core:12.0.3")
+    // Spring Boot starters
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // ✅ Force Flyway 12 (IMPORTANT)
+    implementation 'org.flywaydb:flyway-core:12.3.0'
+    implementation 'org.flywaydb:flyway-database-postgresql:12.3.0'
+
+    // Optional but fine to keep
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+
+    // PostgreSQL driver
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // Other libs
+    implementation 'org.jsoup:jsoup:1.22.1'
+
+    // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // Tests
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-    testCompileOnly 'org.projectlombok:lombok'
-    testAnnotationProcessor 'org.projectlombok:lombok'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly 'com.h2database:h2'
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa:4.0.3")
-    runtimeOnly 'org.postgresql:postgresql'
+
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+flyway {
+    url = 'jdbc:postgresql://localhost:5432/postgres'
+    user = 'postgres'
+    password = 'postgres'
+}
+
+tasks.named('build') {
+    dependsOn 'flywayMigrate'
 }
 
 tasks.named('test') {
