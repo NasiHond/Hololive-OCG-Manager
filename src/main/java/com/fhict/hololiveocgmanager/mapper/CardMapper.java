@@ -4,6 +4,7 @@ import com.fhict.hololiveocgmanager.domain.Card;
 import com.fhict.hololiveocgmanager.entity.CardEntity;
 import com.fhict.hololiveocgmanager.entity.CardtypeEntity;
 import com.fhict.hololiveocgmanager.entity.ColourEntity;
+import com.fhict.hololiveocgmanager.entity.ExtraEntity;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,7 +24,8 @@ public class CardMapper {
                 .holomem(card.getHolomem())
                 .bloomlvl(card.getBloomLvl())
                 .hp(card.getHp())
-                .rarity(card.getRarity());
+                .rarity(card.getRarity())
+                .image(card.getImageURL());
 
         if (card.getCardTypeID() != null)
         {
@@ -43,6 +45,19 @@ public class CardMapper {
             colour.setColour(card.getCardColour().trim());
             builder.cardcolour(colour);
         }
+
+        if (card.getExtraID() != null)
+        {
+            ExtraEntity entity = new ExtraEntity();
+            entity.setId(card.getCardTypeID());
+            entity.setEffect(card.getExtraEffect());
+            builder.extra(entity);
+        } else if (card.getExtraEffect() != null && !card.getExtraEffect().isBlank()) {
+            ExtraEntity entity = new ExtraEntity();
+            entity.setEffect(card.getExtraEffect());
+            builder.extra(entity);
+        }
+
         return builder.build();
     }
 

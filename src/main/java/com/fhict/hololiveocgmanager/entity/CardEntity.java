@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -21,14 +24,14 @@ public class CardEntity {
     private Integer id;
 
     @Column(name = "cardid", nullable = false)
-    private Integer cardid;
+    private String cardid;
 
     @Column(name = "cardset", nullable = false, length = Integer.MAX_VALUE)
     private String cardset;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
-    @JoinColumn(name = "cardtype", nullable = false, referencedColumnName = "name")
+    @JoinColumn(name = "cardtype", nullable = false)
     private CardtypeEntity cardtype;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -51,6 +54,22 @@ public class CardEntity {
     @Column(name = "rarity", nullable = false, length = Integer.MAX_VALUE)
     private String rarity;
 
+    @Column(name = "image", length = Integer.MAX_VALUE)
+    private String image;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "extra_id")
+    private ExtraEntity extra;
+    @OneToMany(mappedBy = "cardid")
+    @Builder.Default
+    private Set<CardartEntity> cardarts = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "cardid")
+    @Builder.Default
+    private Set<CardkeywordEntity> cardkeywords = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "cardid")
+    @Builder.Default
+    private Set<CardtagEntity> cardtags = new LinkedHashSet<>();
+
     public Integer getId() {
         return id;
     }
@@ -59,11 +78,11 @@ public class CardEntity {
         this.id = id;
     }
 
-    public Integer getCardid() {
+    public String getCardid() {
         return cardid;
     }
 
-    public void setCardid(Integer cardid) {
+    public void setCardid(String cardid) {
         this.cardid = cardid;
     }
 
@@ -83,8 +102,8 @@ public class CardEntity {
         this.cardtype = cardtype;
     }
 
-    public String getCardcolourID() {
-        return getCardcolourID();
+    public Integer getCardcolourID() {
+        return cardcolour == null ? null : cardcolour.getId();
     }
 
     public void setCardcolour(ColourEntity cardcolour) {

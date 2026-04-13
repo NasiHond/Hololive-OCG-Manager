@@ -1,10 +1,13 @@
 package com.fhict.hololiveocgmanager.domain;
 
+import com.fhict.hololiveocgmanager.entity.ArtEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -13,7 +16,7 @@ import lombok.Setter;
 @Builder(toBuilder = true)
 public class Card {
     private Integer ID;
-    private Integer cardID;
+    private String cardID;
     private String cardset;
     private Integer cardTypeID;
     private String cardTypeName;
@@ -24,4 +27,8 @@ public class Card {
     private Integer hp;
     private Boolean isBuzz;
     private String rarity;
+    private String imageURL;
+    private Integer extraID;
+    private String extraEffect;
+    private List<Art> arts;
 }

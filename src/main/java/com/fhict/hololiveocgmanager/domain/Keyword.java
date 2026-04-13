@@ -11,9 +11,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class Arts {
+public class Keyword {
     private Integer ID;
-    private String cost;
+    private String type;
     private String name;
     private String effect;
 }

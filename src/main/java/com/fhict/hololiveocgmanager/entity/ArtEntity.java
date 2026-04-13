@@ -1,15 +1,13 @@
 package com.fhict.hololiveocgmanager.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Data
@@ -23,16 +21,26 @@ public class ArtEntity {
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    @Column(name = "cost", length = Integer.MAX_VALUE)
-    private String cost;
-
     @Column(name = "name", length = Integer.MAX_VALUE)
     private String name;
 
     @Column(name = "effect", length = Integer.MAX_VALUE)
     private String effect;
+
     @Column(name = "damage")
     private Integer damage;
+
+    @OneToMany(mappedBy = "artid")
+    @Builder.Default
+    private Set<CardartEntity> cardarts = new LinkedHashSet<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "crit_colour_id")
+    private ColourEntity critColour;
+
+    @OneToMany(mappedBy = "art")
+    @Builder.Default
+    private Set<ArtcostEntity> artcosts = new LinkedHashSet<>();
 
     public Integer getId() {
         return id;
@@ -50,14 +58,6 @@ public class ArtEntity {
         this.name = name;
     }
 
-    public String getCost() {
-        return cost;
-    }
-
-    public void setCost(String cost) {
-        this.cost = cost;
-    }
-
     public String getEffect() {
         return effect;
     }
@@ -67,3 +67,4 @@ public class ArtEntity {
     }
 
 }
+
