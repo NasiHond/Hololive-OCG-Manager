@@ -38,6 +38,10 @@ public class ArtEntity {
     @JoinColumn(name = "crit_colour_id")
     private ColourEntity critColour;
 
+    @OneToMany(mappedBy = "art")
+    @Builder.Default
+    private Set<ArtcostEntity> artcosts = new LinkedHashSet<>();
+
     public Integer getId() {
         return id;
     }
@@ -63,3 +67,4 @@ public class ArtEntity {
     }
 
 }
+

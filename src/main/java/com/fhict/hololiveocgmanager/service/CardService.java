@@ -10,7 +10,7 @@ public interface CardService
 
     Card getCard(Card card);
 
-    List<Card> getCards();
+    List<Card> getAllCards();
 
     Card updateCard(Card card);
 
