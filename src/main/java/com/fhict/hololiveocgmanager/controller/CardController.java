@@ -2,11 +2,14 @@ package com.fhict.hololiveocgmanager.controller;
 
 import com.fhict.hololiveocgmanager.domain.Card;
 import com.fhict.hololiveocgmanager.dto.response.CardResponse;
+import com.fhict.hololiveocgmanager.mapper.CardMapper;
 import com.fhict.hololiveocgmanager.repository.*;
 import com.fhict.hololiveocgmanager.service.CardService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.fhict.hololiveocgmanager.specification.CardSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -25,9 +28,9 @@ public class CardController {
     private final ExtraRepository extraRepository;
     private final ColourRepository colourRepository;
     private final CardService cardService;
+    private final CardMapper cardMapper;
 
-    public  CardController(CardRepository cardRepository, ArtRepository artRepository, ArtcostRepository artcostRepository, CardartRepository cardartRepository, KeywordRepository keywordRepository, CardkeywordRepository cardkeywordRepository, TagRepository tagRepository, CardtagRepository cardtagRepository, CardTypeRepository cardTypeRepository, ExtraRepository extraRepository, ColourRepository colourRepository, CardService cardService)
-    {
+    public CardController(CardRepository cardRepository, ArtRepository artRepository, ArtcostRepository artcostRepository, CardartRepository cardartRepository, KeywordRepository keywordRepository, CardkeywordRepository cardkeywordRepository, TagRepository tagRepository, CardtagRepository cardtagRepository, CardTypeRepository cardTypeRepository, ExtraRepository extraRepository, ColourRepository colourRepository, CardService cardService, CardMapper cardMapper) {
         this.cardRepository = cardRepository;
         this.artRepository = artRepository;
         this.artcostRepository = artcostRepository;
@@ -40,18 +43,66 @@ public class CardController {
         this.extraRepository = extraRepository;
         this.colourRepository = colourRepository;
         this.cardService = cardService;
+        this.cardMapper = cardMapper;
     }
 
-    @PostMapping
-    public List<CardResponse> findAllCards()
-    {
-        return cardService.getAllCards().stream()
+    /**
+     * Get all cards with pagination.
+     * GET /api/cards?page=0&size=20
+     */
+    @GetMapping
+    public Page<CardResponse> getAllCards(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return cardRepository.findAll(pageable)
+                .map(this::entityToDomain)
+                .map(this::toResponse);
+    }
+
+    /**
+     * Search and filter cards with optional parameters.
+     * GET /api/cards/search?cardName=Ina&bloomLvl=3&colour=Blue&cardSet=HoloX
+     * All parameters are optional; null filters are ignored.
+     */
+    @GetMapping("/search")
+    public Page<CardResponse> searchCards(
+            @RequestParam(required = false) String cardName,
+            @RequestParam(required = false) String bloomLvl,
+            @RequestParam(required = false) String colour,
+            @RequestParam(required = false) String cardSet,
+            @RequestParam(required = false) String rarity,
+            @RequestParam(required = false) String cardType,
+            @RequestParam(required = false) String holomem,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        var spec = CardSpecification.withFilters(cardName, bloomLvl, colour, cardSet, rarity, cardType, holomem);
+        return cardRepository.findAll(spec, pageable)
+                .map(this::entityToDomain)
+                .map(this::toResponse);
+    }
+
+    /**
+     * Get a single card by ID.
+     */
+    @GetMapping("/{id}")
+    public CardResponse getCardById(@PathVariable int id) {
+        return cardRepository.findById(id)
+                .map(this::entityToDomain)
                 .map(this::toResponse)
-                .toList();
+                .orElseThrow(() -> new RuntimeException("Card not found"));
     }
 
-    private CardResponse toResponse(Card card)
-    {
+    /**
+     * Convert CardEntity to Card domain object using the CardMapper.
+     */
+    private Card entityToDomain(com.fhict.hololiveocgmanager.entity.CardEntity entity) {
+        return cardMapper.toDomain(entity);
+    }
+
+    private CardResponse toResponse(Card card) {
         return CardResponse.builder()
                 .Id(card.getID())
                 .cardId(card.getCardID())
