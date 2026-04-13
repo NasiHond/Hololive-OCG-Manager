@@ -59,7 +59,7 @@ public class CardServiceImpl implements CardService
     }
 
     @Override
-    public List<Card> getCards() {
+    public List<Card> getAllCards() {
         return StreamSupport.stream(cardRepository.findAll().spliterator(), false)
                 .map(cardMapper::toDomain)
                 .toList();
@@ -115,6 +115,4 @@ public class CardServiceImpl implements CardService
 
         cardEntity.setCardcolour(resolvedColour);
     }
-
-
 }
