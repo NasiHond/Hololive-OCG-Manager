@@ -77,7 +77,10 @@ flyway {
 }
 
 tasks.named('build') {
-    dependsOn 'flywayMigrate'
+    // Only run Flyway during build when explicitly requested (-PrunFlywayOnBuild=true)
+    if (project.findProperty('runFlywayOnBuild')?.toString()?.toBoolean()) {
+        dependsOn 'flywayMigrate'
+    }
 }
 
 tasks.named('test') {
