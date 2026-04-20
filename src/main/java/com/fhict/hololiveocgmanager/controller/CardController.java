@@ -15,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/cards")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class CardController {
     private final CardRepository cardRepository;
     private final ArtRepository artRepository;
