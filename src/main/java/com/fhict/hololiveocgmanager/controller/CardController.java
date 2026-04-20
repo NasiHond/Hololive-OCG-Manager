@@ -11,8 +11,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/cards")
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
@@ -75,11 +73,14 @@ public class CardController {
             @RequestParam(required = false) String rarity,
             @RequestParam(required = false) String cardType,
             @RequestParam(required = false) String holomem,
+            @RequestParam(required = false) String parallel,
+
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
         Pageable pageable = PageRequest.of(page, size);
-        var spec = CardSpecification.withFilters(cardName, bloomLvl, colour, cardSet, rarity, cardType, holomem);
+        var normalizedParallel = parallel == null || parallel.isBlank() ? null : parallel.trim();
+        var spec = CardSpecification.withFilters(cardName, bloomLvl, colour, cardSet, rarity, cardType, holomem, normalizedParallel);
         return cardRepository.findAll(spec, pageable)
                 .map(this::entityToDomain)
                 .map(this::toResponse);
