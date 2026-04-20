@@ -5,60 +5,107 @@ import org.springframework.data.jpa.domain.Specification;
 
 public class CardSpecification {
 
+    private static String normalizeFilter(String value) {
+        return value == null || value.isBlank() ? null : value;
+    }
+
     /**
      * Filter by card name (case-insensitive partial match on cardid).
      */
     public static Specification<CardEntity> cardNameContains(String cardName) {
-        return (root, query, cb) -> cardName == null ? null
-                : cb.like(cb.lower(root.get("cardid")), "%" + cardName.toLowerCase() + "%");
+        final String filter = normalizeFilter(cardName);
+        return (root, query, cb) -> filter == null ? null
+                : cb.like(cb.lower(root.get("cardid")), "%" + filter.toLowerCase() + "%");
     }
 
     /**
      * Filter by bloom level (exact match).
      */
     public static Specification<CardEntity> bloomLevelEquals(String bloomLvl) {
-        return (root, query, cb) -> bloomLvl == null ? null
-                : cb.equal(cb.lower(root.get("bloomlvl")), bloomLvl.toLowerCase());
+        final String filter = normalizeFilter(bloomLvl);
+        return (root, query, cb) -> filter == null ? null
+                : cb.equal(cb.lower(root.get("bloomlvl")), filter.toLowerCase());
     }
 
     /**
      * Filter by colour (exact match).
      */
     public static Specification<CardEntity> colourEquals(String colour) {
-        return (root, query, cb) -> colour == null ? null
-                : cb.equal(cb.lower(root.get("cardcolour").get("colour")), colour.toLowerCase());
+        final String filter = normalizeFilter(colour);
+        return (root, query, cb) -> filter == null ? null
+                : cb.equal(cb.lower(root.get("cardcolour").get("colour")), filter.toLowerCase());
     }
 
     /**
      * Filter by card set (case-insensitive partial match).
      */
     public static Specification<CardEntity> cardSetContains(String cardSet) {
-        return (root, query, cb) -> cardSet == null ? null
-                : cb.like(cb.lower(root.get("cardset")), "%" + cardSet.toLowerCase() + "%");
+        final String filter = normalizeFilter(cardSet);
+        return (root, query, cb) -> filter == null ? null
+                : cb.like(cb.lower(root.get("cardset")), "%" + filter.toLowerCase() + "%");
     }
 
     /**
      * Filter by rarity (exact match).
      */
     public static Specification<CardEntity> rarityEquals(String rarity) {
-        return (root, query, cb) -> rarity == null ? null
-                : cb.equal(cb.lower(root.get("rarity")), rarity.toLowerCase());
+        final String filter = normalizeFilter(rarity);
+        return (root, query, cb) -> filter == null ? null
+                : cb.equal(cb.lower(root.get("rarity")), filter.toLowerCase());
     }
 
     /**
      * Filter by card type (exact match).
      */
     public static Specification<CardEntity> cardTypeEquals(String cardTypeName) {
-        return (root, query, cb) -> cardTypeName == null ? null
-                : cb.equal(cb.lower(root.get("cardtype").get("name")), cardTypeName.toLowerCase());
+        final String filter = normalizeFilter(cardTypeName);
+        return (root, query, cb) -> filter == null ? null
+                : cb.equal(cb.lower(root.get("cardtype").get("name")), filter.toLowerCase());
     }
 
     /**
      * Filter by holomem (case-insensitive partial match).
      */
     public static Specification<CardEntity> holomemContains(String holomem) {
-        return (root, query, cb) -> holomem == null ? null
-                : cb.like(cb.lower(root.get("holomem")), "%" + holomem.toLowerCase() + "%");
+        final String filter = normalizeFilter(holomem);
+        return (root, query, cb) -> filter == null ? null
+                : cb.like(cb.lower(root.get("holomem")), "%" + filter.toLowerCase() + "%");
+    }
+
+    /**
+     * Filter parallel cards.
+     * - true: keep only cards whose cardId appears more than once.
+     * - false: keep only the first row per cardId (lowest id).
+     * - blank/null: ignore.
+     */
+    public static Specification<CardEntity> parallelEquals(String parallel) {
+        final String filter = normalizeFilter(parallel);
+        if (filter == null) {
+            return null;
+        }
+
+        if ("true".equalsIgnoreCase(filter)) {
+            return (root, query, cb) -> {
+                var duplicates = query.subquery(String.class);
+                var duplicateRoot = duplicates.from(CardEntity.class);
+                duplicates.select(duplicateRoot.get("cardid"))
+                        .groupBy(duplicateRoot.get("cardid"))
+                        .having(cb.gt(cb.count(duplicateRoot), 1L));
+                return root.get("cardid").in(duplicates);
+            };
+        }
+
+        if ("false".equalsIgnoreCase(filter)) {
+            return (root, query, cb) -> {
+                var firstCardId = query.subquery(Integer.class);
+                var firstCardRoot = firstCardId.from(CardEntity.class);
+                firstCardId.select(cb.min(firstCardRoot.get("id")))
+                        .where(cb.equal(firstCardRoot.get("cardid"), root.get("cardid")));
+                return cb.equal(root.get("id"), firstCardId);
+            };
+        }
+
+        return null;
     }
 
     /**
@@ -71,8 +118,9 @@ public class CardSpecification {
             String cardSet,
             String rarity,
             String cardType,
-            String holomem) {
-        return Specification
+            String holomem,
+            String parallel) {
+        var spec = Specification
                 .where(cardNameContains(cardName))
                 .and(bloomLevelEquals(bloomLvl))
                 .and(colourEquals(colour))
@@ -80,5 +128,8 @@ public class CardSpecification {
                 .and(rarityEquals(rarity))
                 .and(cardTypeEquals(cardType))
                 .and(holomemContains(holomem));
+
+        var parallelSpec = parallelEquals(parallel);
+        return parallelSpec == null ? spec : spec.and(parallelSpec);
     }
 }
