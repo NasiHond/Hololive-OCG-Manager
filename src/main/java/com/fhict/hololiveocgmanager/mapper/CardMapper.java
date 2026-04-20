@@ -74,7 +74,8 @@ public class CardMapper {
                 .holomem(cardEntity.getHolomem())
                 .bloomLvl(cardEntity.getBloomlvl())
                 .hp(cardEntity.getHp())
-                .rarity(cardEntity.getRarity());
+                .rarity(cardEntity.getRarity())
+                .imageURL(cardEntity.getImage());
 
         if (cardEntity.getCardtype() != null) {
             builder.cardTypeID(cardEntity.getCardtype().getId());
