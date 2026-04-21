@@ -14,9 +14,9 @@ public class HololiveOcgManagerApplication {
         SpringApplication.run(HololiveOcgManagerApplication.class, args);
     }
 
-    @Bean
-    @ConditionalOnProperty(name = "app.scraper.run-on-startup", havingValue = "true", matchIfMissing = true)
-    CommandLineRunner runInitialScrape(CardScraperService cardScraperService) {
-        return args -> cardScraperService.scrapeAllCards();
-    }
+//    @Bean
+//    @ConditionalOnProperty(name = "app.scraper.run-on-startup", havingValue = "true", matchIfMissing = true)
+//    CommandLineRunner runInitialScrape(CardScraperService cardScraperService) {
+//        return args -> cardScraperService.scrapeAllCards();
+//    }
 }

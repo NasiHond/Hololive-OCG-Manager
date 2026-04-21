@@ -16,5 +16,5 @@ public class UserCreateRequest {
 	private String email;
 
 	@NotBlank
-	private String passwordHash;
+	private String password;
 }
