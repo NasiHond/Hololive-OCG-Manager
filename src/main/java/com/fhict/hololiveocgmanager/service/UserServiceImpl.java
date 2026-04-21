@@ -5,6 +5,7 @@ import com.fhict.hololiveocgmanager.entity.UserEntity;
 import com.fhict.hololiveocgmanager.mapper.UserMapper;
 import com.fhict.hololiveocgmanager.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -14,10 +15,12 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserMapper userMapper, UserRepository userRepository) {
+    public UserServiceImpl(UserMapper userMapper, UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
         this.userMapper = userMapper;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -25,7 +28,7 @@ public class UserServiceImpl implements UserService {
     public User createUser(User user) {
         if (!user.isValidForCreate())
         {
-            throw new IllegalArgumentException("User must have a username, email and password hash.");
+            throw new IllegalArgumentException("Account must have a username, email and password.");
         }
 
         if (userRepository.existsByUsernameIgnoreCase(user.getUsername())) {
@@ -36,6 +39,7 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Email is already taken.");
         }
 
+        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
         UserEntity entityToSave = userMapper.toEntity(user);
         UserEntity savedEntity = userRepository.save(entityToSave);
         return userMapper.toDomain(savedEntity);
@@ -74,7 +78,7 @@ public class UserServiceImpl implements UserService {
         }
         if (user.getPasswordHash() != null)
         {
-            userEntity.setPasswordHash(user.getPasswordHash());
+            userEntity.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
         }
         if (user.getBio() != null)
         {
