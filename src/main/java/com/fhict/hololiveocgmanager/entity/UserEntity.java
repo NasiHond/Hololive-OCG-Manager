@@ -21,9 +21,13 @@ public class UserEntity {
     @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(name = "passwordHash", nullable = false)
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
     @Column(name = "bio")
     private String bio;
+
+    //to be implemented hopefully
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
 }
