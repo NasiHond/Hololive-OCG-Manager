@@ -8,8 +8,11 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class LoginResponse {
-    private Integer id;
+    private String accessToken;
+    private String refreshToken;
+    private String tokenType;
+    private String expiresIn;
     private String username;
-    private String Message;
-    private Boolean Authenticated;
+    private String message;
+    private Boolean authenticated;
 }

@@ -2,20 +2,14 @@ package com.fhict.hololiveocgmanager.controller;
 
 import com.fhict.hololiveocgmanager.domain.User;
 import com.fhict.hololiveocgmanager.dto.request.UserCreateRequest;
-import com.fhict.hololiveocgmanager.dto.response.LoginResponse;
 import com.fhict.hololiveocgmanager.dto.response.UserResponse;
 import com.fhict.hololiveocgmanager.entity.UserEntity;
 import com.fhict.hololiveocgmanager.repository.UserRepository;
 import com.fhict.hololiveocgmanager.service.UserService;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -51,15 +45,8 @@ public class UserController {
     }
 
     @PostMapping
-    public UserResponse createUser(@Valid @RequestBody UserCreateRequest userCreateRequest, HttpSession session) {
+    public UserResponse createUser(@Valid @RequestBody UserCreateRequest userCreateRequest) {
         User createdUser = userService.createUser(toDomain(userCreateRequest));
-
-        var authentication = new UsernamePasswordAuthenticationToken(createdUser.getUsername(), null);
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authentication);
-        SecurityContextHolder.setContext(context);
-        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
-        session.setAttribute("loginResponse", new LoginResponse(createdUser.getId(), createdUser.getUsername(), "Login successful", true));
 
         return toResponse(createdUser);
     }

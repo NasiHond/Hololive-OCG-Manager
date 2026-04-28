@@ -14,10 +14,12 @@ public class AuthServiceImpl implements AuthService {
 
     private final BCryptPasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final JwtService jwtService;
 
-    public AuthServiceImpl(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository) {
+    public AuthServiceImpl(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository, JwtService jwtService) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -34,11 +36,15 @@ public class AuthServiceImpl implements AuthService {
             throw new AuthenticationException("Invalid username/email or password");
         }
 
-        return new LoginResponse(
-            user.getId(),
-            user.getUsername(),
-                "Login successful",
-                true
-        );
+        String accessToken = jwtService.generateAccessToken(user.getUsername());
+
+        return LoginResponse.builder()
+                .username(user.getUsername())
+                .accessToken(accessToken)
+                .tokenType("Bearer")
+                .expiresIn(String.valueOf(jwtService.getAccessTokenExpirationSeconds()))
+                .message("Login successful")
+                .authenticated(true)
+                .build();
     }
 }
