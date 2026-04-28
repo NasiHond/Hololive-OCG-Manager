@@ -2,6 +2,8 @@ package com.fhict.hololiveocgmanager.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Data
@@ -15,8 +17,10 @@ public class CollectionEntity {
     @Column(name = "id")
     private Integer id;
 
-    @Column(name = "ownerId")
-    private Integer ownerId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action =  OnDeleteAction.CASCADE)
+    @JoinColumn(name = "ownerId", nullable = false)
+    private UserEntity ownerId;
 
     @Column(name = "visibility")
     private Integer visibility;
