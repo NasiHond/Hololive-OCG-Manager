@@ -1,5 +1,6 @@
 package com.fhict.hololiveocgmanager.dto.request;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
@@ -13,6 +14,7 @@ public class UserCreateRequest {
 	private String username;
 
 	@NotBlank
+	@Email
 	private String email;
 
 	@NotBlank

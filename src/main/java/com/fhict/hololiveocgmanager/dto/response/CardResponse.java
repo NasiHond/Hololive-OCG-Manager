@@ -1,7 +1,5 @@
 package com.fhict.hololiveocgmanager.dto.response;
 
-import com.fhict.hololiveocgmanager.domain.Art;
-import com.fhict.hololiveocgmanager.entity.ArtcostEntity;
 import lombok.*;
 
 import java.util.List;
@@ -22,5 +20,5 @@ public class CardResponse {
     private String rarity;
     private String imageURL;
     private String extraEffect;
-    private List<Art> arts;
+    private List<ArtResponse> arts;
 }

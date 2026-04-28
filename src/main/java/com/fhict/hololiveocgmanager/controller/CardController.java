@@ -11,37 +11,17 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/cards")
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class CardController {
     private final CardRepository cardRepository;
-    private final ArtRepository artRepository;
-    private final ArtcostRepository artcostRepository;
-    private final CardartRepository cardartRepository;
-    private final KeywordRepository keywordRepository;
-    private final CardkeywordRepository cardkeywordRepository;
-    private final TagRepository tagRepository;
-    private final CardtagRepository cardtagRepository;
-    private final CardTypeRepository cardTypeRepository;
-    private final ExtraRepository extraRepository;
-    private final ColourRepository colourRepository;
-    private final CardService cardService;
     private final CardMapper cardMapper;
 
     public CardController(CardRepository cardRepository, ArtRepository artRepository, ArtcostRepository artcostRepository, CardartRepository cardartRepository, KeywordRepository keywordRepository, CardkeywordRepository cardkeywordRepository, TagRepository tagRepository, CardtagRepository cardtagRepository, CardTypeRepository cardTypeRepository, ExtraRepository extraRepository, ColourRepository colourRepository, CardService cardService, CardMapper cardMapper) {
         this.cardRepository = cardRepository;
-        this.artRepository = artRepository;
-        this.artcostRepository = artcostRepository;
-        this.cardartRepository = cardartRepository;
-        this.keywordRepository = keywordRepository;
-        this.cardkeywordRepository = cardkeywordRepository;
-        this.tagRepository = tagRepository;
-        this.cardtagRepository = cardtagRepository;
-        this.cardTypeRepository = cardTypeRepository;
-        this.extraRepository = extraRepository;
-        this.colourRepository = colourRepository;
-        this.cardService = cardService;
         this.cardMapper = cardMapper;
     }
 
@@ -97,9 +77,7 @@ public class CardController {
                 .orElseThrow(() -> new RuntimeException("Card not found"));
     }
 
-    /**
-     * Convert CardEntity to Card domain object using the CardMapper.
-     */
+
     private Card entityToDomain(com.fhict.hololiveocgmanager.entity.CardEntity entity) {
         return cardMapper.toDomain(entity);
     }
@@ -119,7 +97,27 @@ public class CardController {
                 .rarity(card.getRarity())
                 .imageURL(card.getImageURL())
                 .extraEffect(card.getExtraEffect())
-                .arts(card.getArts())
+                .arts(card.getArts() != null ? 
+                    card.getArts().stream()
+                        .map(art -> new com.fhict.hololiveocgmanager.dto.response.ArtResponse(
+                            art.getID(),
+                            art.getName(),
+                            art.getEffect(),
+                            art.getDamage(),
+                            art.getCritColourName(),
+                            art.getCosts() != null ?
+                                art.getCosts().stream()
+                                    .map(cost -> new com.fhict.hololiveocgmanager.dto.response.ArtcostResponse(
+                                        cost.getId(),
+                                        cost.getAmount(),
+                                        cost.getColour() != null ? cost.getColour().getColour() : null,
+                                        cost.getColour() != null ? cost.getColour().getImageUrl() : null
+                                    ))
+                                    .toList()
+                                : List.of()
+                        ))
+                        .toList()
+                    : List.of())
                 .build();
     }
 }
