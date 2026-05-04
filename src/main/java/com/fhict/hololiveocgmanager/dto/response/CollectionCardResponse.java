@@ -3,6 +3,8 @@ package com.fhict.hololiveocgmanager.dto.response;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class CollectionCardResponse {
@@ -20,5 +22,8 @@ public class CollectionCardResponse {
     private String holomem;
     private String bloomLvl;
     private Integer hp;
+    private KeywordResponse keyword;
     private String extraEffect;
+    private List<ArtResponse> arts;
+    private List<TagResponse> tags;
 }

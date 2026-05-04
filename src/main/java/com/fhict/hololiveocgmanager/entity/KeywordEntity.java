@@ -3,11 +3,19 @@ package com.fhict.hololiveocgmanager.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -16,6 +24,8 @@ public class KeywordEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private Integer id;
 
     @Column(name = "type", nullable = false, length = Integer.MAX_VALUE)
@@ -26,6 +36,11 @@ public class KeywordEntity {
 
     @Column(name = "effect", nullable = false, length = Integer.MAX_VALUE)
     private String effect;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "card_id", nullable = false)
+    private CardEntity card;
 
     public Integer getId() {
         return id;
@@ -57,6 +72,14 @@ public class KeywordEntity {
 
     public void setEffect(String effect) {
         this.effect = effect;
+    }
+
+    public CardEntity getCard() {
+        return card;
+    }
+
+    public void setCard(CardEntity card) {
+        this.card = card;
     }
 
 }

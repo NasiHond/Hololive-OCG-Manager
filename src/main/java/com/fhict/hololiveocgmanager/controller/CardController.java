@@ -1,7 +1,11 @@
 package com.fhict.hololiveocgmanager.controller;
 
 import com.fhict.hololiveocgmanager.domain.Card;
+import com.fhict.hololiveocgmanager.domain.Keyword;
+import com.fhict.hololiveocgmanager.domain.Tag;
 import com.fhict.hololiveocgmanager.dto.response.CardResponse;
+import com.fhict.hololiveocgmanager.dto.response.KeywordResponse;
+import com.fhict.hololiveocgmanager.dto.response.TagResponse;
 import com.fhict.hololiveocgmanager.mapper.CardMapper;
 import com.fhict.hololiveocgmanager.repository.*;
 import com.fhict.hololiveocgmanager.service.CardService;
@@ -20,7 +24,7 @@ public class CardController {
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
 
-    public CardController(CardRepository cardRepository, ArtRepository artRepository, ArtcostRepository artcostRepository, CardartRepository cardartRepository, KeywordRepository keywordRepository, CardkeywordRepository cardkeywordRepository, TagRepository tagRepository, CardtagRepository cardtagRepository, CardTypeRepository cardTypeRepository, ExtraRepository extraRepository, ColourRepository colourRepository, CardService cardService, CardMapper cardMapper) {
+    public CardController(CardRepository cardRepository, CardMapper cardMapper) {
         this.cardRepository = cardRepository;
         this.cardMapper = cardMapper;
     }
@@ -97,7 +101,8 @@ public class CardController {
                 .rarity(card.getRarity())
                 .imageURL(card.getImageURL())
                 .extraEffect(card.getExtraEffect())
-                .arts(card.getArts() != null ? 
+                .keywords(mapKeywordsToResponse(card.getKeywords()))
+                .arts(card.getArts() != null ?
                     card.getArts().stream()
                         .map(art -> new com.fhict.hololiveocgmanager.dto.response.ArtResponse(
                             art.getID(),
@@ -118,6 +123,35 @@ public class CardController {
                         ))
                         .toList()
                     : List.of())
+                .tags(mapTagsToResponse(card.getTags()))
                 .build();
+    }
+
+    private List<KeywordResponse> mapKeywordsToResponse(List<Keyword> keywords) {
+        if (keywords == null || keywords.isEmpty()) {
+            return List.of();
+        }
+
+        return keywords.stream()
+                .map(keyword -> KeywordResponse.builder()
+                        .id(keyword.getID())
+                        .type(keyword.getType())
+                        .name(keyword.getName())
+                        .effect(keyword.getEffect())
+                        .build())
+                .toList();
+    }
+
+    private List<TagResponse> mapTagsToResponse(List<Tag> tags) {
+        if (tags == null || tags.isEmpty()) {
+            return List.of();
+        }
+
+        return tags.stream()
+                .map(tag -> TagResponse.builder()
+                        .id(tag.getId())
+                        .name(tag.getName())
+                        .build())
+                .toList();
     }
 }

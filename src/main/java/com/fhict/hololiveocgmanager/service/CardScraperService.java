@@ -54,7 +54,6 @@ public class CardScraperService {
     private final ArtcostRepository artcostRepository;
     private final CardartRepository cardartRepository;
     private final KeywordRepository keywordRepository;
-    private final CardkeywordRepository cardkeywordRepository;
     private final TagRepository tagRepository;
     private final CardtagRepository cardtagRepository;
 
@@ -67,7 +66,6 @@ public class CardScraperService {
             ArtcostRepository artcostRepository,
             CardartRepository cardartRepository,
             KeywordRepository keywordRepository,
-            CardkeywordRepository cardkeywordRepository,
             TagRepository tagRepository,
             CardtagRepository cardtagRepository
     ) {
@@ -79,7 +77,6 @@ public class CardScraperService {
         this.artcostRepository = artcostRepository;
         this.cardartRepository = cardartRepository;
         this.keywordRepository = keywordRepository;
-        this.cardkeywordRepository = cardkeywordRepository;
         this.tagRepository = tagRepository;
         this.cardtagRepository = cardtagRepository;
     }
@@ -320,18 +317,14 @@ public class CardScraperService {
                 continue;
             }
 
-            KeywordEntity resolved = keywordRepository
-                    .findByTypeIgnoreCaseAndNameIgnoreCaseAndEffectIgnoreCase(type, name, effect)
-                    .orElseGet(() -> keywordRepository.save(KeywordEntity.builder()
-                            .type(type)
-                            .name(name)
-                            .effect(effect)
-                            .build()));
+            KeywordEntity keyword = KeywordEntity.builder()
+                    .type(type)
+                    .name(name)
+                    .effect(effect)
+                    .card(savedCard)
+                    .build();
 
-            CardkeywordEntity link = new CardkeywordEntity();
-            link.setCardid(savedCard);
-            link.setKeywordid(resolved);
-            cardkeywordRepository.save(link);
+            keywordRepository.save(keyword);
         }
     }
 
