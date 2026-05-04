@@ -34,9 +34,9 @@ public class CollectionController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid userId format");
         }
 
-        Integer parsedUserId;
+        int parsedUserId;
         try {
-            parsedUserId = Integer.valueOf(userId);
+            parsedUserId = Integer.parseInt(userId);
         } catch (NumberFormatException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId must be a number");
         }

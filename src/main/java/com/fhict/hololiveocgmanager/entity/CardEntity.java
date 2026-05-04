@@ -3,8 +3,11 @@ package com.fhict.hololiveocgmanager.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -12,7 +15,10 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -21,6 +27,8 @@ public class CardEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private Integer id;
 
     @Column(name = "cardid", nullable = false)
@@ -63,9 +71,9 @@ public class CardEntity {
     @OneToMany(mappedBy = "cardid")
     @Builder.Default
     private Set<CardartEntity> cardarts = new LinkedHashSet<>();
-    @OneToMany(mappedBy = "cardid")
+    @OneToMany(mappedBy = "card", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Set<CardkeywordEntity> cardkeywords = new LinkedHashSet<>();
+    private Set<KeywordEntity> keywords = new LinkedHashSet<>();
     @OneToMany(mappedBy = "cardid")
     @Builder.Default
     private Set<CardtagEntity> cardtags = new LinkedHashSet<>();
@@ -148,6 +156,14 @@ public class CardEntity {
 
     public void setRarity(String rarity) {
         this.rarity = rarity;
+    }
+
+    public Set<KeywordEntity> getKeywords() {
+        return keywords;
+    }
+
+    public void setKeywords(Set<KeywordEntity> keywords) {
+        this.keywords = keywords;
     }
 
 }

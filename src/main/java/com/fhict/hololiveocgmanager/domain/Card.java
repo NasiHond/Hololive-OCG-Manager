@@ -28,7 +28,9 @@ public class Card {
     private Boolean isBuzz;
     private String rarity;
     private String imageURL;
+    private List<Keyword> keywords;
     private Integer extraID;
     private String extraEffect;
     private List<Art> arts;
+    private List<Tag> tags;
 }

@@ -19,6 +19,8 @@ public class CardResponse {
     private Integer hp;
     private String rarity;
     private String imageURL;
+    private List<KeywordResponse> keywords;
     private String extraEffect;
     private List<ArtResponse> arts;
+    private List<TagResponse> tags;
 }
