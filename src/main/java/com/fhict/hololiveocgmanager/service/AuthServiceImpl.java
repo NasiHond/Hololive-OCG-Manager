@@ -40,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
 
         return LoginResponse.builder()
                 .username(user.getUsername())
+                .id(user.getId())
                 .accessToken(accessToken)
                 .tokenType("Bearer")
                 .expiresIn(String.valueOf(jwtService.getAccessTokenExpirationSeconds()))
