@@ -13,6 +13,7 @@ public class LoginResponse {
     private String tokenType;
     private String expiresIn;
     private String username;
+    private Integer id;
     private String message;
     private Boolean authenticated;
 }
