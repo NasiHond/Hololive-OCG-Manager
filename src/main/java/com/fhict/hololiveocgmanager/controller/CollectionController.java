@@ -1,5 +1,6 @@
 package com.fhict.hololiveocgmanager.controller;
 
+import com.fhict.hololiveocgmanager.dto.response.CollectionCardResponse;
 import com.fhict.hololiveocgmanager.dto.response.CollectionCardsPageResponse;
 import com.fhict.hololiveocgmanager.service.CollectionService;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -42,5 +43,42 @@ public class CollectionController {
         }
 
         return collectionService.getCollectionByUserId(parsedUserId, page, size);
+    }
+
+    @GetMapping("/{userId}/{cardId}")
+    public CollectionCardResponse getCollectionCard(
+            @PathVariable String userId,
+            @PathVariable String cardId) {
+        if (userId == null || userId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId path variable is required");
+        }
+
+        if (cardId == null || cardId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "cardId path variable is required");
+        }
+
+        if (userId.contains("${") || userId.contains("}")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid userId format");
+        }
+
+        if (cardId.contains("${") || cardId.contains("}")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid cardId format");
+        }
+
+        int parsedUserId;
+        try {
+            parsedUserId = Integer.parseInt(userId);
+        } catch (NumberFormatException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId must be a number");
+        }
+
+        int parsedCardId;
+        try {
+            parsedCardId = Integer.parseInt(cardId);
+        } catch (NumberFormatException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "cardId must be a number");
+        }
+
+        return collectionService.getCollectionCardByUserIdAndCardId(parsedUserId, parsedCardId);
     }
 }
