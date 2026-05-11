@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import com.fhict.hololiveocgmanager.domain.Visibility;
 
 @Entity
 @Data
@@ -23,5 +24,6 @@ public class CollectionEntity {
     private UserEntity ownerId;
 
     @Column(name = "visibility")
-    private Integer visibility;
+    @Enumerated(EnumType.STRING)
+    private Visibility visibility;
 }

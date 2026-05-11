@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import com.fhict.hololiveocgmanager.domain.Visibility;
 
 @Entity
 @Data
@@ -29,5 +30,6 @@ public class DeckEntity {
     private String deckDescription;
 
     @Column(name = "visibility", nullable = false)
-    private Integer visibility;
+    @Enumerated(EnumType.STRING)
+    private Visibility visibility;
 }
