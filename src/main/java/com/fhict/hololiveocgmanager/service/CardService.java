@@ -10,6 +10,8 @@ public interface CardService
 
     Card getCard(Card card);
 
+    Card getCardByCardId(Integer cardId);
+
     List<Card> getAllCards();
 
     Card updateCard(Card card);

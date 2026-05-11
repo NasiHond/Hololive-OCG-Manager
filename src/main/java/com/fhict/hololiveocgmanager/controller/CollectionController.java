@@ -1,25 +1,28 @@
 package com.fhict.hololiveocgmanager.controller;
 
+import com.fhict.hololiveocgmanager.dto.request.CollectionCardUpdateRequest;
 import com.fhict.hololiveocgmanager.dto.response.CollectionCardResponse;
 import com.fhict.hololiveocgmanager.dto.response.CollectionCardsPageResponse;
+import com.fhict.hololiveocgmanager.entity.UserEntity;
 import com.fhict.hololiveocgmanager.service.CollectionService;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import com.fhict.hololiveocgmanager.repository.UserRepository;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @RequestMapping("/api/collections")
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class CollectionController {
     private final CollectionService collectionService;
+    private final UserRepository userRepository;
 
-    public CollectionController(CollectionService collectionService) {
+    public CollectionController(CollectionService collectionService, UserRepository userRepository) {
         this.collectionService = collectionService;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/{userId}")
@@ -38,7 +41,7 @@ public class CollectionController {
         int parsedUserId;
         try {
             parsedUserId = Integer.parseInt(userId);
-        } catch (NumberFormatException ex) {
+        } catch (NumberFormatException _) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId must be a number");
         }
 
@@ -68,17 +71,44 @@ public class CollectionController {
         int parsedUserId;
         try {
             parsedUserId = Integer.parseInt(userId);
-        } catch (NumberFormatException ex) {
+        } catch (NumberFormatException _) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId must be a number");
         }
 
         int parsedCardId;
         try {
             parsedCardId = Integer.parseInt(cardId);
-        } catch (NumberFormatException ex) {
+        } catch (NumberFormatException _) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "cardId must be a number");
         }
 
         return collectionService.getCollectionCardByUserIdAndCardId(parsedUserId, parsedCardId);
+    }
+
+    @PutMapping("/{userId}/cards")
+    public ResponseEntity<CollectionCardResponse> updateCollectionCard(
+            @PathVariable String userId,
+            @RequestBody CollectionCardUpdateRequest updateRequest
+    ){
+        if (updateRequest == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CollectionCardUpdateRequest body is required");
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof String)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not authenticated");
+        }
+
+        String username = (String) authentication.getPrincipal();
+        Integer authenticatedUserId = userRepository.findByUsername(username)
+                .map(UserEntity::getId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not authorized"));
+
+        CollectionCardResponse updated = collectionService.updateCollectionCardByUserId(
+                authenticatedUserId,
+                updateRequest.getCollectionId(),
+                updateRequest.getCardId(),
+                updateRequest.getAmount());
+        return ResponseEntity.ok(updated);
     }
 }

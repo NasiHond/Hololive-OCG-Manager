@@ -1,6 +1,5 @@
 package com.fhict.hololiveocgmanager.domain;
 
-import com.fhict.hololiveocgmanager.entity.ArtEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class Card {
-    private Integer ID;
+    private Integer id;
     private String cardID;
     private String cardset;
     private Integer cardTypeID;

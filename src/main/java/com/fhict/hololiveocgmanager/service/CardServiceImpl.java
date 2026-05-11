@@ -49,11 +49,22 @@ public class CardServiceImpl implements CardService
 
     @Override
     public Card getCard(Card card) {
-        if (card == null || card.getID() == null) {
+        if (card == null || card.getId() == null) {
             return null;
         }
 
-        return cardRepository.findById(card.getID())
+        return cardRepository.findById(card.getId())
+                .map(cardMapper::toDomain)
+                .orElse(null);
+    }
+
+    @Override
+    public Card getCardByCardId(Integer cardId) {
+        if (cardId == null || cardId == 0) {
+            return null;
+        }
+
+        return  cardRepository.findById(cardId)
                 .map(cardMapper::toDomain)
                 .orElse(null);
     }
@@ -72,11 +83,11 @@ public class CardServiceImpl implements CardService
 
     @Override
     public void deleteCard(Card card) {
-        if (card == null || card.getID() == null) {
+        if (card == null || card.getId() == null) {
             return;
         }
 
-        cardRepository.deleteById(card.getID());
+        cardRepository.deleteById(card.getId());
     }
 
     private void resolveTypeReference(CardEntity cardEntity) {

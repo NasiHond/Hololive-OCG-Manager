@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 @Builder
 public class CardResponse {
-    private Integer Id;
+    private Integer id;
     private String cardId;
     private String cardSet;
     private Integer cardTypeId;

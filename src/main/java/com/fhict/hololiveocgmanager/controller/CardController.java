@@ -8,7 +8,6 @@ import com.fhict.hololiveocgmanager.dto.response.KeywordResponse;
 import com.fhict.hololiveocgmanager.dto.response.TagResponse;
 import com.fhict.hololiveocgmanager.mapper.CardMapper;
 import com.fhict.hololiveocgmanager.repository.*;
-import com.fhict.hololiveocgmanager.service.CardService;
 import com.fhict.hololiveocgmanager.specification.CardSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -88,7 +87,7 @@ public class CardController {
 
     private CardResponse toResponse(Card card) {
         return CardResponse.builder()
-                .Id(card.getID())
+                .id(card.getId())
                 .cardId(card.getCardID())
                 .cardSet(card.getCardset())
                 .cardTypeId(card.getCardTypeID())
@@ -105,7 +104,7 @@ public class CardController {
                 .arts(card.getArts() != null ?
                     card.getArts().stream()
                         .map(art -> new com.fhict.hololiveocgmanager.dto.response.ArtResponse(
-                            art.getID(),
+                            art.getId(),
                             art.getName(),
                             art.getEffect(),
                             art.getDamage(),

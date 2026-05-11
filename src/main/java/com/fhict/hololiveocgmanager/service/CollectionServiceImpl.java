@@ -3,14 +3,12 @@ package com.fhict.hololiveocgmanager.service;
 import com.fhict.hololiveocgmanager.dto.response.CollectionCardResponse;
 import com.fhict.hololiveocgmanager.dto.response.CollectionCardsPageResponse;
 import com.fhict.hololiveocgmanager.dto.response.CollectionResponse;
-import com.fhict.hololiveocgmanager.entity.CollectionCardsEntity;
-import com.fhict.hololiveocgmanager.entity.CollectionEntity;
+import com.fhict.hololiveocgmanager.entity.*;
 import com.fhict.hololiveocgmanager.repository.CollectionCardsRepository;
 import com.fhict.hololiveocgmanager.mapper.CardMapper;
 import com.fhict.hololiveocgmanager.dto.response.KeywordResponse;
 import com.fhict.hololiveocgmanager.dto.response.TagResponse;
-import com.fhict.hololiveocgmanager.entity.CardtagEntity;
-import com.fhict.hololiveocgmanager.entity.KeywordEntity;
+
 import java.util.List;
 import com.fhict.hololiveocgmanager.repository.CollectionRepository;
 import org.springframework.data.domain.Page;
@@ -25,13 +23,15 @@ import org.springframework.web.server.ResponseStatusException;
 public class CollectionServiceImpl implements CollectionService {
     private final CollectionRepository collectionRepository;
     private final CollectionCardsRepository collectionCardsRepository;
+    private final CardService cardService;
     private final CardMapper cardMapper;
 
     public CollectionServiceImpl(CollectionRepository collectionRepository,
-                                CollectionCardsRepository collectionCardsRepository,
-                                CardMapper cardMapper) {
+                                 CollectionCardsRepository collectionCardsRepository, CardService cardService,
+                                 CardMapper cardMapper) {
         this.collectionRepository = collectionRepository;
         this.collectionCardsRepository = collectionCardsRepository;
+        this.cardService = cardService;
         this.cardMapper = cardMapper;
     }
 
@@ -82,6 +82,68 @@ public class CollectionServiceImpl implements CollectionService {
         return toCardResponse(collectionCard);
     }
 
+    @Override
+    @Transactional
+    public CollectionCardResponse updateCollectionCardByUserId(Integer userId, Integer collectionId, Integer cardId, Integer amount) {
+        if (cardId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "cardId is required");
+        }
+
+        if (amount == null || amount < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "amount must be non-negative");
+        }
+
+        CollectionEntity collection = collectionRepository.findById(collectionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Collection not found"));
+
+        if (collection.getOwnerId().getId() != userId) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to modify this collection");
+        }
+
+        CardEntity card = cardMapper.toEntity(cardService.getCardByCardId(cardId));
+
+        var opt = collectionCardsRepository.findByCollectionId_IdAndCardId_Id(collection.getId(), cardId);
+
+        if (opt.isPresent()) {
+            // update existing collection_cards row
+            CollectionCardsEntity existing = opt.get();
+            if (amount == 0) {
+                collectionCardsRepository.deleteByCollectionId_IdAndCardId_Id(collection.getId(), cardId);
+                return getCollectionCardResponse(card);
+            } else {
+                existing.setCardCount(amount);
+                var saved = collectionCardsRepository.save(existing);
+                return toCardResponse(saved);
+            }
+        } else {
+            // insert new collection_cards row
+            if (amount == 0) {
+                // nothing to create, return minimal response
+                return getCollectionCardResponse(card);
+            }
+
+            CollectionCardsEntity created = CollectionCardsEntity.builder()
+                    .collectionId(collection)
+                    .cardId(card)
+                    .cardCount(amount)
+                    .build();
+
+            var saved = collectionCardsRepository.save(created);
+            return toCardResponse(saved);
+        }
+    }
+
+    private CollectionCardResponse getCollectionCardResponse(CardEntity card) {
+        return CollectionCardResponse.builder()
+                .id(card != null ? card.getId() : null)
+                .collectionCardId(null)
+                .cardId(card != null ? card.getCardid() : null)
+                .name(card != null ? card.getHolomem() : null)
+                .imageUrl(card != null ? card.getImage() : null)
+                .cardCount(0)
+                .build();
+    }
+
     private CollectionCardResponse toCardResponse(CollectionCardsEntity collectionCard) {
         return CollectionCardResponse.builder()
                 .id(collectionCard.getCardId() != null ? collectionCard.getCardId().getId() : null)
@@ -128,5 +190,4 @@ public class CollectionServiceImpl implements CollectionService {
                         : List.of())
                 .build();
     }
-
 }

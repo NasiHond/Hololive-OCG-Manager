@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class Art {
-    private Integer ID;
+    private Integer id;
     private String name;
     private String effect;
     private Integer damage;
