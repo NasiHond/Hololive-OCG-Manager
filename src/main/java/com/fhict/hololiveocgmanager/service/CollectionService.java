@@ -7,4 +7,7 @@ public interface CollectionService {
     CollectionCardsPageResponse getCollectionByUserId(Integer userId, int page, int size);
 
     CollectionCardResponse getCollectionCardByUserIdAndCardId(Integer userId, Integer cardId);
+
+    CollectionCardResponse updateCollectionCardByUserId(Integer userId, Integer collectionId, Integer cardId, Integer amount);
+
 }

@@ -16,5 +16,7 @@ public interface CollectionCardsRepository extends JpaRepository<CollectionCards
     Long sumCardCountByCollectionId_Id(@Param("collectionId") Integer collectionId);
 
     Optional<CollectionCardsEntity> findByCollectionId_IdAndCardId_Id(Integer collectionId, Integer cardId);
+
+    void deleteByCollectionId_IdAndCardId_Id(Integer collectionId, Integer cardId);
 }
 

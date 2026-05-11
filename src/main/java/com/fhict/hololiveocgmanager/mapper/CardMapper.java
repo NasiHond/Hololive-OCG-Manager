@@ -14,8 +14,6 @@ import com.fhict.hololiveocgmanager.entity.CardtagEntity;
 import com.fhict.hololiveocgmanager.entity.CardtypeEntity;
 import com.fhict.hololiveocgmanager.entity.ColourEntity;
 import com.fhict.hololiveocgmanager.entity.ExtraEntity;
-import com.fhict.hololiveocgmanager.entity.KeywordEntity;
-import com.fhict.hololiveocgmanager.entity.TagEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.Comparator;
@@ -32,7 +30,7 @@ public class CardMapper {
         }
 
         CardEntity.CardEntityBuilder builder = CardEntity.builder()
-                .id(card.getID())
+                .id(card.getId())
                 .cardid(card.getCardID())
                 .cardset(card.getCardset())
                 .batonpass(card.getBatonpass())
@@ -82,7 +80,7 @@ public class CardMapper {
         }
 
         Card.CardBuilder builder = Card.builder()
-                .ID(cardEntity.getId())
+                .id(cardEntity.getId())
                 .cardID(cardEntity.getCardid())
                 .cardset(cardEntity.getCardset())
                 .batonpass(cardEntity.getBatonpass())
@@ -123,7 +121,7 @@ public class CardMapper {
 
     private Art mapArt(ArtEntity artEntity) {
         return Art.builder()
-                .ID(artEntity.getId())
+                .id(artEntity.getId())
                 .name(artEntity.getName())
                 .effect(artEntity.getEffect())
                 .damage(artEntity.getDamage())
