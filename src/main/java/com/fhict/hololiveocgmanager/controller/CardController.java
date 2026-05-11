@@ -1,47 +1,30 @@
 package com.fhict.hololiveocgmanager.controller;
 
 import com.fhict.hololiveocgmanager.domain.Card;
+import com.fhict.hololiveocgmanager.domain.Keyword;
+import com.fhict.hololiveocgmanager.domain.Tag;
 import com.fhict.hololiveocgmanager.dto.response.CardResponse;
+import com.fhict.hololiveocgmanager.dto.response.KeywordResponse;
+import com.fhict.hololiveocgmanager.dto.response.TagResponse;
 import com.fhict.hololiveocgmanager.mapper.CardMapper;
 import com.fhict.hololiveocgmanager.repository.*;
-import com.fhict.hololiveocgmanager.service.CardService;
 import com.fhict.hololiveocgmanager.specification.CardSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/cards")
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class CardController {
     private final CardRepository cardRepository;
-    private final ArtRepository artRepository;
-    private final ArtcostRepository artcostRepository;
-    private final CardartRepository cardartRepository;
-    private final KeywordRepository keywordRepository;
-    private final CardkeywordRepository cardkeywordRepository;
-    private final TagRepository tagRepository;
-    private final CardtagRepository cardtagRepository;
-    private final CardTypeRepository cardTypeRepository;
-    private final ExtraRepository extraRepository;
-    private final ColourRepository colourRepository;
-    private final CardService cardService;
     private final CardMapper cardMapper;
 
-    public CardController(CardRepository cardRepository, ArtRepository artRepository, ArtcostRepository artcostRepository, CardartRepository cardartRepository, KeywordRepository keywordRepository, CardkeywordRepository cardkeywordRepository, TagRepository tagRepository, CardtagRepository cardtagRepository, CardTypeRepository cardTypeRepository, ExtraRepository extraRepository, ColourRepository colourRepository, CardService cardService, CardMapper cardMapper) {
+    public CardController(CardRepository cardRepository, CardMapper cardMapper) {
         this.cardRepository = cardRepository;
-        this.artRepository = artRepository;
-        this.artcostRepository = artcostRepository;
-        this.cardartRepository = cardartRepository;
-        this.keywordRepository = keywordRepository;
-        this.cardkeywordRepository = cardkeywordRepository;
-        this.tagRepository = tagRepository;
-        this.cardtagRepository = cardtagRepository;
-        this.cardTypeRepository = cardTypeRepository;
-        this.extraRepository = extraRepository;
-        this.colourRepository = colourRepository;
-        this.cardService = cardService;
         this.cardMapper = cardMapper;
     }
 
@@ -97,16 +80,14 @@ public class CardController {
                 .orElseThrow(() -> new RuntimeException("Card not found"));
     }
 
-    /**
-     * Convert CardEntity to Card domain object using the CardMapper.
-     */
+
     private Card entityToDomain(com.fhict.hololiveocgmanager.entity.CardEntity entity) {
         return cardMapper.toDomain(entity);
     }
 
     private CardResponse toResponse(Card card) {
         return CardResponse.builder()
-                .Id(card.getID())
+                .id(card.getId())
                 .cardId(card.getCardID())
                 .cardSet(card.getCardset())
                 .cardTypeId(card.getCardTypeID())
@@ -119,7 +100,57 @@ public class CardController {
                 .rarity(card.getRarity())
                 .imageURL(card.getImageURL())
                 .extraEffect(card.getExtraEffect())
-                .arts(card.getArts())
+                .keywords(mapKeywordsToResponse(card.getKeywords()))
+                .arts(card.getArts() != null ?
+                    card.getArts().stream()
+                        .map(art -> new com.fhict.hololiveocgmanager.dto.response.ArtResponse(
+                            art.getId(),
+                            art.getName(),
+                            art.getEffect(),
+                            art.getDamage(),
+                            art.getCritColourName(),
+                            art.getCosts() != null ?
+                                art.getCosts().stream()
+                                    .map(cost -> new com.fhict.hololiveocgmanager.dto.response.ArtcostResponse(
+                                        cost.getId(),
+                                        cost.getAmount(),
+                                        cost.getColour() != null ? cost.getColour().getColour() : null,
+                                        cost.getColour() != null ? cost.getColour().getImageUrl() : null
+                                    ))
+                                    .toList()
+                                : List.of()
+                        ))
+                        .toList()
+                    : List.of())
+                .tags(mapTagsToResponse(card.getTags()))
                 .build();
+    }
+
+    private List<KeywordResponse> mapKeywordsToResponse(List<Keyword> keywords) {
+        if (keywords == null || keywords.isEmpty()) {
+            return List.of();
+        }
+
+        return keywords.stream()
+                .map(keyword -> KeywordResponse.builder()
+                        .id(keyword.getID())
+                        .type(keyword.getType())
+                        .name(keyword.getName())
+                        .effect(keyword.getEffect())
+                        .build())
+                .toList();
+    }
+
+    private List<TagResponse> mapTagsToResponse(List<Tag> tags) {
+        if (tags == null || tags.isEmpty()) {
+            return List.of();
+        }
+
+        return tags.stream()
+                .map(tag -> TagResponse.builder()
+                        .id(tag.getId())
+                        .name(tag.getName())
+                        .build())
+                .toList();
     }
 }

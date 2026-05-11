@@ -1,8 +1,11 @@
 package com.fhict.hololiveocgmanager.service;
 
 import com.fhict.hololiveocgmanager.domain.User;
+import com.fhict.hololiveocgmanager.domain.Visibility;
+import com.fhict.hololiveocgmanager.entity.CollectionEntity;
 import com.fhict.hololiveocgmanager.entity.UserEntity;
 import com.fhict.hololiveocgmanager.mapper.UserMapper;
+import com.fhict.hololiveocgmanager.repository.CollectionRepository;
 import com.fhict.hololiveocgmanager.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -15,11 +18,13 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final UserRepository userRepository;
+    private final CollectionRepository collectionRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserMapper userMapper, UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserMapper userMapper, UserRepository userRepository, CollectionRepository collectionRepository, BCryptPasswordEncoder passwordEncoder) {
         this.userMapper = userMapper;
         this.userRepository = userRepository;
+        this.collectionRepository = collectionRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -42,6 +47,13 @@ public class UserServiceImpl implements UserService {
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
         UserEntity entityToSave = userMapper.toEntity(user);
         UserEntity savedEntity = userRepository.save(entityToSave);
+
+        // Create default collection for user
+        CollectionEntity collectionEntity = new CollectionEntity();
+        collectionEntity.setOwnerId(savedEntity);
+        collectionEntity.setVisibility(Visibility.PUBLIC);
+        collectionRepository.save(collectionEntity);
+
         return userMapper.toDomain(savedEntity);
     }
 

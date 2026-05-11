@@ -1,11 +1,24 @@
 package com.fhict.hololiveocgmanager.mapper;
 
+import com.fhict.hololiveocgmanager.domain.Art;
 import com.fhict.hololiveocgmanager.domain.Card;
+import com.fhict.hololiveocgmanager.domain.Keyword;
+import com.fhict.hololiveocgmanager.domain.Tag;
+import com.fhict.hololiveocgmanager.dto.response.ArtcostResponse;
+import com.fhict.hololiveocgmanager.dto.response.ArtResponse;
+import com.fhict.hololiveocgmanager.entity.ArtEntity;
+import com.fhict.hololiveocgmanager.entity.ArtcostEntity;
+import com.fhict.hololiveocgmanager.entity.CardartEntity;
 import com.fhict.hololiveocgmanager.entity.CardEntity;
+import com.fhict.hololiveocgmanager.entity.CardtagEntity;
 import com.fhict.hololiveocgmanager.entity.CardtypeEntity;
 import com.fhict.hololiveocgmanager.entity.ColourEntity;
 import com.fhict.hololiveocgmanager.entity.ExtraEntity;
 import org.springframework.stereotype.Component;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 
 @Component
 public class CardMapper {
@@ -17,7 +30,7 @@ public class CardMapper {
         }
 
         CardEntity.CardEntityBuilder builder = CardEntity.builder()
-                .id(card.getID())
+                .id(card.getId())
                 .cardid(card.getCardID())
                 .cardset(card.getCardset())
                 .batonpass(card.getBatonpass())
@@ -67,7 +80,7 @@ public class CardMapper {
         }
 
         Card.CardBuilder builder = Card.builder()
-                .ID(cardEntity.getId())
+                .id(cardEntity.getId())
                 .cardID(cardEntity.getCardid())
                 .cardset(cardEntity.getCardset())
                 .batonpass(cardEntity.getBatonpass())
@@ -75,6 +88,11 @@ public class CardMapper {
                 .bloomLvl(cardEntity.getBloomlvl())
                 .hp(cardEntity.getHp())
                 .rarity(cardEntity.getRarity())
+                .extraID(cardEntity.getExtra() != null ? cardEntity.getExtra().getId() : null)
+                .extraEffect(cardEntity.getExtra() != null ? cardEntity.getExtra().getEffect() : null)
+                .arts(mapArts(cardEntity))
+                .keywords(mapKeywords(cardEntity))
+                .tags(mapTags(cardEntity))
                 .imageURL(cardEntity.getImage());
 
         if (cardEntity.getCardtype() != null) {
@@ -87,5 +105,110 @@ public class CardMapper {
         }
 
         return builder.build();
+    }
+
+    private List<Art> mapArts(CardEntity cardEntity) {
+        if (cardEntity.getCardarts() == null || cardEntity.getCardarts().isEmpty()) {
+            return List.of();
+        }
+
+        return cardEntity.getCardarts().stream()
+                .map(CardartEntity::getArtid)
+                .filter(Objects::nonNull)
+                .map(this::mapArt)
+                .toList();
+    }
+
+    private Art mapArt(ArtEntity artEntity) {
+        return Art.builder()
+                .id(artEntity.getId())
+                .name(artEntity.getName())
+                .effect(artEntity.getEffect())
+                .damage(artEntity.getDamage())
+                .critColourName(artEntity.getCritColour() != null ? artEntity.getCritColour().getColour() : null)
+                .costs(mapArtCosts(artEntity))
+                .build();
+    }
+
+    private List<ArtcostEntity> mapArtCosts(ArtEntity artEntity) {
+        if (artEntity.getArtcosts() == null || artEntity.getArtcosts().isEmpty()) {
+            return List.of();
+        }
+
+        return artEntity.getArtcosts().stream()
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(ArtcostEntity::getId, Comparator.nullsLast(Integer::compareTo)))
+                .toList();
+    }
+
+    public List<ArtResponse> mapArtsToResponse(CardEntity cardEntity) {
+        if (cardEntity.getCardarts() == null || cardEntity.getCardarts().isEmpty()) {
+            return List.of();
+        }
+
+        return cardEntity.getCardarts().stream()
+                .map(CardartEntity::getArtid)
+                .filter(Objects::nonNull)
+                .map(this::mapArtToResponse)
+                .toList();
+    }
+
+    private ArtResponse mapArtToResponse(ArtEntity artEntity) {
+        return ArtResponse.builder()
+                .id(artEntity.getId())
+                .name(artEntity.getName())
+                .effect(artEntity.getEffect())
+                .damage(artEntity.getDamage())
+                .critColourName(artEntity.getCritColour() != null ? artEntity.getCritColour().getColour() : null)
+                .costs(mapArtCostsToResponse(artEntity))
+                .build();
+    }
+
+    private List<ArtcostResponse> mapArtCostsToResponse(ArtEntity artEntity) {
+        if (artEntity.getArtcosts() == null || artEntity.getArtcosts().isEmpty()) {
+            return List.of();
+        }
+
+        return artEntity.getArtcosts().stream()
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(ArtcostEntity::getId, Comparator.nullsLast(Integer::compareTo)))
+                .map(cost -> ArtcostResponse.builder()
+                        .id(cost.getId())
+                        .amount(cost.getAmount())
+                        .colourName(cost.getColour() != null ? cost.getColour().getColour() : null)
+                        .colourImageUrl(cost.getColour() != null ? cost.getColour().getImageUrl() : null)
+                        .build())
+                .toList();
+    }
+
+    private List<Keyword> mapKeywords(CardEntity cardEntity) {
+        if (cardEntity.getKeywords() == null || cardEntity.getKeywords().isEmpty()) {
+            return List.of();
+        }
+
+        return cardEntity.getKeywords().stream()
+                .filter(Objects::nonNull)
+                .map(keywordEntity -> Keyword.builder()
+                        .ID(keywordEntity.getId())
+                        .type(keywordEntity.getType())
+                        .name(keywordEntity.getName())
+                        .effect(keywordEntity.getEffect())
+                        .build())
+                .toList();
+    }
+
+    private List<Tag> mapTags(CardEntity cardEntity) {
+        if (cardEntity.getCardtags() == null || cardEntity.getCardtags().isEmpty()) {
+            return List.of();
+        }
+
+        return cardEntity.getCardtags().stream()
+                .map(CardtagEntity::getTagid)
+                .filter(Objects::nonNull)
+                .map(tagEntity -> Tag.builder()
+                        .id(tagEntity.getId())
+                        .name(tagEntity.getName())
+                        .build())
+                .toList();
     }
 }
