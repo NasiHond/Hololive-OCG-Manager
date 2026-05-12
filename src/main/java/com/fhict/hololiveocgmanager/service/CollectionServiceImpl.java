@@ -14,10 +14,11 @@ import com.fhict.hololiveocgmanager.repository.CollectionRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+import com.fhict.hololiveocgmanager.exception.BadRequestException;
+import com.fhict.hololiveocgmanager.exception.ForbiddenException;
+import com.fhict.hololiveocgmanager.exception.NotFoundException;
 
 @Service
 public class CollectionServiceImpl implements CollectionService {
@@ -39,7 +40,7 @@ public class CollectionServiceImpl implements CollectionService {
     @Transactional(readOnly = true)
     public CollectionCardsPageResponse getCollectionByUserId(Integer userId, int page, int size) {
         CollectionEntity collection = collectionRepository.findByOwnerId_Id(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Collection not found for user"));
+                .orElseThrow(() -> new NotFoundException("Collection not found for user"));
 
         Integer collectionId = collection.getId();
 
@@ -71,13 +72,13 @@ public class CollectionServiceImpl implements CollectionService {
     public CollectionCardResponse getCollectionCardByUserIdAndCardId(Integer userId, Integer cardId)
     {
         CollectionEntity collection = collectionRepository.findByOwnerId_Id(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Collection not found for user"));
+                .orElseThrow(() -> new NotFoundException("Collection not found for user"));
 
         Integer collectionId = collection.getId();
 
         CollectionCardsEntity collectionCard = collectionCardsRepository
                 .findByCollectionId_IdAndCardId_Id(collectionId, cardId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Card not found in collection"));
+                .orElseThrow(() -> new NotFoundException("Card not found in collection"));
 
         return toCardResponse(collectionCard);
     }
@@ -86,18 +87,18 @@ public class CollectionServiceImpl implements CollectionService {
     @Transactional
     public CollectionCardResponse updateCollectionCardByUserId(Integer userId, Integer collectionId, Integer cardId, Integer amount) {
         if (cardId == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "cardId is required");
+            throw new BadRequestException("cardId is required");
         }
 
         if (amount == null || amount < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "amount must be non-negative");
+            throw new BadRequestException("amount must be non-negative");
         }
 
         CollectionEntity collection = collectionRepository.findById(collectionId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Collection not found"));
+                .orElseThrow(() -> new NotFoundException("Collection not found"));
 
         if (collection.getOwnerId().getId() != userId) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to modify this collection");
+            throw new ForbiddenException("You do not have permission to modify this collection");
         }
 
         CardEntity card = cardMapper.toEntity(cardService.getCardByCardId(cardId));

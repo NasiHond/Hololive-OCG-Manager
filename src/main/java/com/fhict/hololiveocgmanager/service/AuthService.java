@@ -1,11 +1,11 @@
 package com.fhict.hololiveocgmanager.service;
 
 import com.fhict.hololiveocgmanager.dto.request.LoginRequest;
-import com.fhict.hololiveocgmanager.dto.response.LoginResponse;
-
-import javax.naming.AuthenticationException;
+import com.fhict.hololiveocgmanager.dto.response.AuthResponse;
 
 public interface AuthService
 {
-    LoginResponse login(LoginRequest loginRequest) throws AuthenticationException;
+    AuthResponse login(LoginRequest loginRequest);
+
+    AuthResponse validateToken(String token);
 }
