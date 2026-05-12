@@ -7,11 +7,11 @@ import com.fhict.hololiveocgmanager.entity.UserEntity;
 import com.fhict.hololiveocgmanager.service.CollectionService;
 import com.fhict.hololiveocgmanager.repository.UserRepository;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.fhict.hololiveocgmanager.exception.BadRequestException;
+import com.fhict.hololiveocgmanager.exception.ForbiddenException;
 
 @RestController
 @RequestMapping("/api/collections")
@@ -31,18 +31,18 @@ public class CollectionController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         if (userId == null || userId.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId path variable is required");
+            throw new BadRequestException("userId path variable is required");
         }
 
         if (userId.contains("${") || userId.contains("}")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid userId format");
+            throw new BadRequestException("Invalid userId format");
         }
 
         int parsedUserId;
         try {
             parsedUserId = Integer.parseInt(userId);
         } catch (NumberFormatException _) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId must be a number");
+            throw new BadRequestException("userId must be a number");
         }
 
         return collectionService.getCollectionByUserId(parsedUserId, page, size);
@@ -53,33 +53,33 @@ public class CollectionController {
             @PathVariable String userId,
             @PathVariable String cardId) {
         if (userId == null || userId.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId path variable is required");
+            throw new BadRequestException("userId path variable is required");
         }
 
         if (cardId == null || cardId.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "cardId path variable is required");
+            throw new BadRequestException("cardId path variable is required");
         }
 
         if (userId.contains("${") || userId.contains("}")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid userId format");
+            throw new BadRequestException("Invalid userId format");
         }
 
         if (cardId.contains("${") || cardId.contains("}")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid cardId format");
+            throw new BadRequestException("Invalid cardId format");
         }
 
         int parsedUserId;
         try {
             parsedUserId = Integer.parseInt(userId);
         } catch (NumberFormatException _) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId must be a number");
+            throw new BadRequestException("userId must be a number");
         }
 
         int parsedCardId;
         try {
             parsedCardId = Integer.parseInt(cardId);
         } catch (NumberFormatException _) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "cardId must be a number");
+            throw new BadRequestException("cardId must be a number");
         }
 
         return collectionService.getCollectionCardByUserIdAndCardId(parsedUserId, parsedCardId);
@@ -91,18 +91,18 @@ public class CollectionController {
             @RequestBody CollectionCardUpdateRequest updateRequest
     ){
         if (updateRequest == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CollectionCardUpdateRequest body is required");
+            throw new BadRequestException("CollectionCardUpdateRequest body is required");
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof String)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not authenticated");
+            throw new ForbiddenException("User is not authenticated");
         }
 
         String username = (String) authentication.getPrincipal();
         Integer authenticatedUserId = userRepository.findByUsername(username)
                 .map(UserEntity::getId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not authorized"));
+                .orElseThrow(() -> new ForbiddenException("User is not authorized"));
 
         CollectionCardResponse updated = collectionService.updateCollectionCardByUserId(
                 authenticatedUserId,

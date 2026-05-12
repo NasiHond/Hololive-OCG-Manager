@@ -7,7 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LoginResponse {
+public class AuthResponse {
     private String accessToken;
     private String refreshToken;
     private String tokenType;
@@ -16,4 +16,5 @@ public class LoginResponse {
     private Integer id;
     private String message;
     private Boolean authenticated;
+    private Boolean valid;
 }
