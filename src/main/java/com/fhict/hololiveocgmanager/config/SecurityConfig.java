@@ -34,14 +34,17 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/users", "/api/users/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/cards", "/api/cards/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/decks", "/api/decks/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/collections/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/collections/**").authenticated()
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/error",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/error").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/cards/**", "/api/decks/**", "/api/collections/**", "/api/users/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/collections/**", "/api/users/**").authenticated()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

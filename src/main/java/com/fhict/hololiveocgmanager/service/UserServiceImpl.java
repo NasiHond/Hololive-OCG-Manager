@@ -2,12 +2,15 @@ package com.fhict.hololiveocgmanager.service;
 
 import com.fhict.hololiveocgmanager.domain.User;
 import com.fhict.hololiveocgmanager.domain.Visibility;
+import com.fhict.hololiveocgmanager.dto.request.UserUpdateRequest;
 import com.fhict.hololiveocgmanager.entity.CollectionEntity;
 import com.fhict.hololiveocgmanager.entity.UserEntity;
 import com.fhict.hololiveocgmanager.mapper.UserMapper;
 import com.fhict.hololiveocgmanager.repository.CollectionRepository;
 import com.fhict.hololiveocgmanager.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -63,38 +66,41 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> getUsersByUsername(String username) {
-        List<User> users = new ArrayList<>();
-        userRepository.findByUsernameContainingIgnoreCase(username, null).forEach(entity -> users.add(userMapper.toDomain(entity)));
-        return users;
+    public Page<User> getUsersByUsername(String username, Pageable pageable) {
+        return userRepository.findByUsernameContainingIgnoreCase(username, pageable)
+                .map(userMapper::toDomain);
     }
 
     @Override
     @Transactional
-    public User updateUser(User user, Integer id) {
+    public User updateUser(UserUpdateRequest updateRequest, Integer id) {
         UserEntity userEntity = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User with id " + id + " not found."));
-        if (user.getUsername() != null)
+        if (updateRequest.getUsername() != null)
         {
-            if (userRepository.existsByUsernameIgnoreCase(user.getUsername()) && !userRepository.findByUsernameIgnoreCase(user.getUsername()).get().getId().equals(id)) {
+            if (userRepository.existsByUsernameIgnoreCase(updateRequest.getUsername()) && !userRepository.findByUsernameIgnoreCase(updateRequest.getUsername()).get().getId().equals(id)) {
                 throw new IllegalArgumentException("Username is already taken.");
             }
-            userEntity.setUsername(user.getUsername());
+            userEntity.setUsername(updateRequest.getUsername());
         }
-        if (user.getEmail() != null)
+        if (updateRequest.getEmail() != null)
         {
-            if (userRepository.existsByEmailIgnoreCase(user.getEmail()) && !userRepository.findByEmailIgnoreCase(user.getEmail()).get().getId().equals(id)) {
+            if (userRepository.existsByEmailIgnoreCase(updateRequest.getEmail()) && !userRepository.findByEmailIgnoreCase(updateRequest.getEmail()).get().getId().equals(id)) {
                 throw new IllegalArgumentException("Email is already taken.");
             }
-            userEntity.setEmail(user.getEmail());
+            userEntity.setEmail(updateRequest.getEmail());
         }
-        if (user.getPasswordHash() != null)
+        if (updateRequest.getPasswordHash() != null)
         {
-            userEntity.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+            userEntity.setPasswordHash(passwordEncoder.encode(updateRequest.getPasswordHash()));
         }
-        if (user.getBio() != null)
+        if (updateRequest.getBio() != null)
         {
-            userEntity.setBio(user.getBio());
+            userEntity.setBio(updateRequest.getBio());
+        }
+        if (updateRequest.getProfileImageUrl() != null)
+        {
+            userEntity.setProfileImageUrl(updateRequest.getProfileImageUrl());
         }
 
         UserEntity savedEntity = userRepository.save(userEntity);
