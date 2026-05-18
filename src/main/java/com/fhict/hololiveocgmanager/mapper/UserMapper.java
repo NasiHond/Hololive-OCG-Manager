@@ -22,7 +22,7 @@ public class UserMapper {
             return null;
         }
         return User.builder()
-                .Id(userEntity.getId())
+                .id(userEntity.getId())
                 .username(userEntity.getUsername())
                 .email(userEntity.getEmail())
                 .passwordHash(userEntity.getPasswordHash())
