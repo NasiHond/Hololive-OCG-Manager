@@ -31,5 +31,9 @@ public class DeckEntity {
 
     @Column(name = "visibility", nullable = false)
     @Enumerated(EnumType.STRING)
-    private Visibility visibility;
+    @Builder.Default
+    private Visibility visibility = Visibility.PRIVATE;
+
+    @Column(name = "deckImageUrl")
+    private String deckImageUrl;
 }
