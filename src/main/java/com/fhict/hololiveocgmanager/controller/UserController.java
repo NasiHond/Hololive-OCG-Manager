@@ -5,7 +5,9 @@ import com.fhict.hololiveocgmanager.dto.request.UserCreateRequest;
 import com.fhict.hololiveocgmanager.dto.request.UserUpdateRequest;
 import com.fhict.hololiveocgmanager.dto.response.UserResponse;
 import com.fhict.hololiveocgmanager.entity.UserEntity;
+import com.fhict.hololiveocgmanager.exception.BadRequestException;
 import com.fhict.hololiveocgmanager.exception.ForbiddenException;
+import com.fhict.hololiveocgmanager.exception.NotFoundException;
 import com.fhict.hololiveocgmanager.repository.UserRepository;
 import com.fhict.hololiveocgmanager.service.UserService;
 import jakarta.validation.Valid;
@@ -34,7 +36,7 @@ public class UserController {
     public UserResponse findById(@PathVariable Integer id) {
         User user = userService.getUser(id);
         if (user == null) {
-            throw new IllegalArgumentException("User not found");
+            throw new NotFoundException("User not found");
         }
         return toResponse(user);
     }
@@ -54,7 +56,7 @@ public class UserController {
     public UserResponse updateUser(@PathVariable Integer id, @RequestBody UserUpdateRequest updateRequest) {
         if (updateRequest == null)
         {
-            throw new IllegalArgumentException("Update request body is required");
+            throw new BadRequestException("Update request body is required");
         }
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof String username)) {
