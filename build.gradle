@@ -11,6 +11,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '4.0.3'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.flywaydb.flyway' version '12.3.0'
 }
 
 group = 'com.fhict'
@@ -46,6 +47,8 @@ dependencies {
     implementation 'org.flywaydb:flyway-core:12.3.0'
     implementation 'org.flywaydb:flyway-database-postgresql:12.3.0'
 
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+
     // PostgreSQL driver
     runtimeOnly 'org.postgresql:postgresql'
 
@@ -72,11 +75,11 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
-//flyway {
-//    url = 'jdbc:postgresql://localhost:5432/postgres'
-//    user = 'postgres'
-//    password = 'postgres'
-//}
+flyway {
+    url = 'jdbc:postgresql://localhost:5432/postgres'
+    user = 'postgres'
+    password = 'postgres'
+}
 
 tasks.named('test') {
     useJUnitPlatform()
