@@ -2,15 +2,21 @@ package com.fhict.hololiveocgmanager.controller;
 
 import com.fhict.hololiveocgmanager.domain.User;
 import com.fhict.hololiveocgmanager.dto.request.UserCreateRequest;
+import com.fhict.hololiveocgmanager.dto.request.UserUpdateRequest;
 import com.fhict.hololiveocgmanager.dto.response.UserResponse;
 import com.fhict.hololiveocgmanager.entity.UserEntity;
+import com.fhict.hololiveocgmanager.exception.ForbiddenException;
 import com.fhict.hololiveocgmanager.repository.UserRepository;
 import com.fhict.hololiveocgmanager.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -25,23 +31,41 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public UserEntity findById(@PathVariable Integer id) {
-        return userRepository.findById(id).orElse(null);
+    public UserResponse findById(@PathVariable Integer id) {
+        User user = userService.getUser(id);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+        return toResponse(user);
     }
 
     @GetMapping("/search")
-    public Page<UserEntity> searchUsers(
+    public Page<UserResponse> searchUsers(
             @RequestParam String username,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return userRepository.findByUsernameContainingIgnoreCase(username, pageable);
+
+        return userService.getUsersByUsername(username, pageable)
+                .map(this::toResponse);
     }
 
     @PutMapping("/{id}")
-    public UserEntity updateUser(@PathVariable Integer id, @RequestBody UserEntity user) {
-        user.setId(id);
-        return userRepository.save(user);
+    public UserResponse updateUser(@PathVariable Integer id, @RequestBody UserUpdateRequest updateRequest) {
+        if (updateRequest == null)
+        {
+            throw new IllegalArgumentException("Update request body is required");
+        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof String username)) {
+            throw new ForbiddenException("User is not authenticated");
+        }
+
+        Integer authenticatedUserId = userRepository.findByUsername(username)
+                .map(UserEntity::getId)
+                .orElseThrow(() -> new ForbiddenException("User is not authorized"));
+
+        return toResponse(userService.updateUser(updateRequest, authenticatedUserId));
     }
 
     @PostMapping
