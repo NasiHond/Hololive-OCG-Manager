@@ -4,8 +4,11 @@ import com.fhict.hololiveocgmanager.domain.Art;
 import com.fhict.hololiveocgmanager.domain.Card;
 import com.fhict.hololiveocgmanager.domain.Keyword;
 import com.fhict.hololiveocgmanager.domain.Tag;
-import com.fhict.hololiveocgmanager.dto.response.ArtcostResponse;
 import com.fhict.hololiveocgmanager.dto.response.ArtResponse;
+import com.fhict.hololiveocgmanager.dto.response.ArtcostResponse;
+import com.fhict.hololiveocgmanager.dto.response.DeckCardResponse;
+import com.fhict.hololiveocgmanager.dto.response.KeywordResponse;
+import com.fhict.hololiveocgmanager.dto.response.TagResponse;
 import com.fhict.hololiveocgmanager.entity.ArtEntity;
 import com.fhict.hololiveocgmanager.entity.ArtcostEntity;
 import com.fhict.hololiveocgmanager.entity.CardartEntity;
@@ -208,6 +211,66 @@ public class CardMapper {
                 .map(tagEntity -> Tag.builder()
                         .id(tagEntity.getId())
                         .name(tagEntity.getName())
+                        .build())
+                .toList();
+    }
+
+    public DeckCardResponse toDeckCardResponse(CardEntity cardEntity, Integer deckId, Integer count) {
+        DeckCardResponse.DeckCardResponseBuilder builder = DeckCardResponse.builder()
+                .deckId(deckId)
+                .count(count != null ? count : 0);
+
+        if (cardEntity == null) {
+            return builder.build();
+        }
+
+        return builder
+                .id(cardEntity.getId())
+                .cardID(cardEntity.getCardid())
+                .cardset(cardEntity.getCardset())
+                .cardTypeName(cardEntity.getCardtype() != null ? cardEntity.getCardtype().getName() : null)
+                .cardColour(cardEntity.getCardcolour() != null ? cardEntity.getCardcolour().getColour() : null)
+                .batonpass(cardEntity.getBatonpass())
+                .holomem(cardEntity.getHolomem())
+                .bloomLvl(cardEntity.getBloomlvl())
+                .hp(cardEntity.getHp())
+                .rarity(cardEntity.getRarity())
+                .imageURL(cardEntity.getImage())
+                .keywords(mapKeywordsToResponse(cardEntity))
+                .extraID(cardEntity.getExtra() != null ? cardEntity.getExtra().getId() : null)
+                .extraEffect(cardEntity.getExtra() != null ? cardEntity.getExtra().getEffect() : null)
+                .arts(mapArtsToResponse(cardEntity))
+                .tags(mapTagsToResponse(cardEntity))
+                .build();
+    }
+
+    private List<KeywordResponse> mapKeywordsToResponse(CardEntity cardEntity) {
+        if (cardEntity.getKeywords() == null || cardEntity.getKeywords().isEmpty()) {
+            return List.of();
+        }
+
+        return cardEntity.getKeywords().stream()
+                .filter(Objects::nonNull)
+                .map(keyword -> KeywordResponse.builder()
+                        .id(keyword.getId())
+                        .type(keyword.getType())
+                        .name(keyword.getName())
+                        .effect(keyword.getEffect())
+                        .build())
+                .toList();
+    }
+
+    private List<TagResponse> mapTagsToResponse(CardEntity cardEntity) {
+        if (cardEntity.getCardtags() == null || cardEntity.getCardtags().isEmpty()) {
+            return List.of();
+        }
+
+        return cardEntity.getCardtags().stream()
+                .map(CardtagEntity::getTagid)
+                .filter(Objects::nonNull)
+                .map(tag -> TagResponse.builder()
+                        .id(tag.getId())
+                        .name(tag.getName())
                         .build())
                 .toList();
     }

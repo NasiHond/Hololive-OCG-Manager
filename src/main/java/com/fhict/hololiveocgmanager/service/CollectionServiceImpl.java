@@ -10,6 +10,8 @@ import com.fhict.hololiveocgmanager.dto.response.KeywordResponse;
 import com.fhict.hololiveocgmanager.dto.response.TagResponse;
 
 import java.util.List;
+import java.util.Objects;
+
 import com.fhict.hololiveocgmanager.repository.CollectionRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -97,7 +99,7 @@ public class CollectionServiceImpl implements CollectionService {
         CollectionEntity collection = collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new NotFoundException("Collection not found"));
 
-        if (collection.getOwnerId().getId() != userId) {
+        if (!Objects.equals(collection.getOwnerId().getId(), userId)) {
             throw new ForbiddenException("You do not have permission to modify this collection");
         }
 
@@ -109,7 +111,7 @@ public class CollectionServiceImpl implements CollectionService {
             // update existing collection_cards row
             CollectionCardsEntity existing = opt.get();
             if (amount == 0) {
-                collectionCardsRepository.deleteByCollectionId_IdAndCardId_Id(collection.getId(), cardId);
+                collectionCardsRepository.delete(existing);
                 return getCollectionCardResponse(card);
             } else {
                 existing.setCardCount(amount);
