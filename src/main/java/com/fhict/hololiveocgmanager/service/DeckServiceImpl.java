@@ -22,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -85,6 +86,19 @@ public class DeckServiceImpl implements DeckService
     }
 
     @Override
+    public List<DeckCardResponse> getDeckCardsByCardIdAndUserId(Integer cardId, Integer userId)
+    {
+        List<DeckCardResponse> responses = new ArrayList<>();
+
+        for (DeckEntity deckEntity : deckRepository.findAllByCreatorId_Id(userId)) {
+            deckCardsRepository.findAllByCardId_IdAndDeckId(cardId, deckEntity)
+                    .ifPresent(deckCard -> responses.add(cardMapper.toDeckCardResponse(cardMapper.deckCardToDomain(deckCard))));
+        }
+
+        return responses;
+    }
+
+    @Override
     public Page<DeckResponse> getPublicDecksByUser(Integer userId, Pageable pageable)
     {
         return deckRepository.findAllByCreatorId_IdAndVisibility(userId, Visibility.PUBLIC, pageable)
@@ -93,8 +107,30 @@ public class DeckServiceImpl implements DeckService
     }
 
     @Override
+    public Page<DeckResponse> getVisibleDecks(Integer userId, Pageable pageable) {
+        if (userId != null) {
+            return deckRepository.findAllByVisibilityOrCreatorId_Id(Visibility.PUBLIC, userId, pageable)
+                    .map(deckMapper::toDomain)
+                    .map(deckMapper::toResponse);
+        } else {
+            return deckRepository.findAllByVisibility(Visibility.PUBLIC, pageable)
+                    .map(deckMapper::toDomain)
+                    .map(deckMapper::toResponse);
+        }
+    }
+
+    @Override
     public DeckCardResponse updateDeckCard(Integer deckId, DeckCardUpdateRequest updateRequest)
     {
+        if (updateRequest == null) {
+            throw new BadRequestException("Update request body is required");
+        }
+        if (updateRequest.getCardId() == null) {
+            throw new BadRequestException("Card id is required");
+        }
+        if (updateRequest.getCount() == null) {
+            throw new BadRequestException("Card count is required");
+        }
         if (updateRequest.getCount() < 0) {
             throw new BadRequestException("Card count cannot be negative");
         }
