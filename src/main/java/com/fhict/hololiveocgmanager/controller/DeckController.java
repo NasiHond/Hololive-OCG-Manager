@@ -15,12 +15,15 @@ import com.fhict.hololiveocgmanager.exception.NotFoundException;
 import com.fhict.hololiveocgmanager.repository.DeckRepository;
 import com.fhict.hololiveocgmanager.repository.UserRepository;
 import com.fhict.hololiveocgmanager.service.DeckService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/decks")
@@ -47,6 +50,38 @@ public class DeckController {
                 .orElseThrow(() -> new NotFoundException("Authenticated user not found in database"));
 
         return deckService.createDeck(createDeckRequest, user.getId());
+    }
+
+    @GetMapping
+    public Page<DeckResponse> getDecks(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size)
+    {
+        Pageable pageable = PageRequest.of(page, size);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication != null ? authentication.getName() : null;
+
+        Integer userId = null;
+        if (currentUsername != null && !currentUsername.equals("anonymousUser")) {
+            userId = userRepository.findByUsername(currentUsername)
+                    .map(UserEntity::getId)
+                    .orElse(null);
+        }
+
+        return deckService.getVisibleDecks(userId, pageable);
+    }
+
+    @GetMapping("/cards/{cardId}")
+    public List<DeckCardResponse> getDeckCardsByCardId(@PathVariable Integer cardId)
+    {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof String username)) {
+            throw new ForbiddenException("User must be authenticated to access deck cards");
+        }
+
+        Integer userId = userRepository.findByUsername(username)
+                .map(UserEntity::getId)
+                .orElseThrow(() -> new NotFoundException("Authenticated user not found"));
+
+        return deckService.getDeckCardsByCardIdAndUserId(cardId, userId);
     }
 
     @GetMapping("{deckId}")
@@ -97,7 +132,7 @@ public class DeckController {
     }
 
     @PutMapping("/{deckId}/cards")
-    public DeckCardResponse updateDeckCard(@PathVariable Integer deckId, DeckCardUpdateRequest updateRequest)
+    public DeckCardResponse updateDeckCard(@PathVariable Integer deckId, @Valid @RequestBody DeckCardUpdateRequest updateRequest)
     {
         if (updateRequest == null)
         {

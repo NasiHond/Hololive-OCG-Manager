@@ -22,7 +22,6 @@ public class DeckCard {
     private String holomem;
     private String bloomLvl;
     private Integer hp;
-    private Boolean isBuzz;
     private String rarity;
     private String imageURL;
     private List<Keyword> keywords;

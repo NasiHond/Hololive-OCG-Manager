@@ -10,13 +10,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public interface DeckService {
     DeckResponse createDeck(CreateDeckRequest createDeckRequest, Integer userId);
 
     Page<DeckResponse> getDecksByUser(Integer userId, Pageable pageable);
 
+    List<DeckCardResponse> getDeckCardsByCardIdAndUserId(Integer cardId,  Integer userId);
+
     Page<DeckResponse> getPublicDecksByUser(Integer userId, Pageable pageable);
+
+    Page<DeckResponse> getVisibleDecks(Integer userId, Pageable pageable);
 
     DeckPageResponse getDeckPage(Integer deckId);
 

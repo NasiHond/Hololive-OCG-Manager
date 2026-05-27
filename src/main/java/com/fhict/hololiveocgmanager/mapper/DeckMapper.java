@@ -1,7 +1,9 @@
 package com.fhict.hololiveocgmanager.mapper;
 
 import com.fhict.hololiveocgmanager.domain.Deck;
+import com.fhict.hololiveocgmanager.domain.DeckCard;
 import com.fhict.hololiveocgmanager.dto.response.DeckResponse;
+import com.fhict.hololiveocgmanager.entity.DeckCardsEntity;
 import com.fhict.hololiveocgmanager.entity.DeckEntity;
 import com.fhict.hololiveocgmanager.entity.UserEntity;
 import com.fhict.hololiveocgmanager.mapper.UserMapper;
