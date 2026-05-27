@@ -1,0 +1,2 @@
+ALTER TABLE cardtypes
+    ALTER COLUMN name SET DEFAULT null;
