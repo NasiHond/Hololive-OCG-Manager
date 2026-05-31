@@ -15,7 +15,7 @@ import com.fhict.hololiveocgmanager.exception.ForbiddenException;
 
 @RestController
 @RequestMapping("/api/collections")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:5173", "http://145.220.72.119"}, allowCredentials = "true")
 public class CollectionController {
     private final CollectionService collectionService;
     private final UserRepository userRepository;
