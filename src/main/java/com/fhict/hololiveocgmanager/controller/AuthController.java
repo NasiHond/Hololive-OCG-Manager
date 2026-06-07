@@ -7,9 +7,10 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = {"http://localhost:5173", "http://145.220.72.119"}, allowCredentials = "true")
+@CrossOrigin(origins = "{app.cors.allowed-origins}", allowCredentials = "true")
 public class AuthController {
 
     private final AuthService authService;

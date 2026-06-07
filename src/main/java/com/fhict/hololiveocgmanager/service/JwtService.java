@@ -1,6 +1,8 @@
 package com.fhict.hololiveocgmanager.service;
 
 import com.fhict.hololiveocgmanager.config.JwtProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Mac;
@@ -15,6 +17,7 @@ import java.util.regex.Pattern;
 @Service
 public class JwtService {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
     private static final String HMAC_ALGORITHM = "HmacSHA256";
     private static final String JWT_TYPE_HEADER = base64UrlEncodeStatic("{\"alg\":\"HS256\",\"typ\":\"JWT\"}".getBytes(StandardCharsets.UTF_8));
     private static final Pattern SUB_PATTERN = Pattern.compile("\\\"sub\\\"\\s*:\\s*\\\"([^\\\"]*)\\\"");
@@ -27,14 +30,22 @@ public class JwtService {
     }
 
     public String generateAccessToken(String username) {
-        long issuedAt = Instant.now().getEpochSecond();
-        long expiresAt = issuedAt + jwtProperties.getAccessTokenExpirationSeconds();
+        try {
+            logger.debug("Generating access token for user: {}", username);
+            long issuedAt = Instant.now().getEpochSecond();
+            long expiresAt = issuedAt + jwtProperties.getAccessTokenExpirationSeconds();
 
-        String payloadJson = "{\"sub\":\"" + escapeJson(username) + "\",\"iat\":" + issuedAt + ",\"exp\":" + expiresAt + "}";
-        String encodedPayload = base64UrlEncode(payloadJson.getBytes(StandardCharsets.UTF_8));
-        String signingInput = JWT_TYPE_HEADER + "." + encodedPayload;
-        String signature = base64UrlEncode(sign(signingInput));
-        return signingInput + "." + signature;
+            String payloadJson = "{\"sub\":\"" + escapeJson(username) + "\",\"iat\":" + issuedAt + ",\"exp\":" + expiresAt + "}";
+            String encodedPayload = base64UrlEncode(payloadJson.getBytes(StandardCharsets.UTF_8));
+            String signingInput = JWT_TYPE_HEADER + "." + encodedPayload;
+            String signature = base64UrlEncode(sign(signingInput));
+            String token = signingInput + "." + signature;
+            logger.debug("Token generated successfully");
+            return token;
+        } catch (Exception ex) {
+            logger.error("Failed to generate access token", ex);
+            throw ex;
+        }
     }
 
     public String extractUsername(String token) {
@@ -56,6 +67,7 @@ public class JwtService {
             long exp = Long.parseLong(expMatcher.group(1));
             return exp > Instant.now().getEpochSecond();
         } catch (Exception ex) {
+            logger.warn("Token validation failed", ex);
             return false;
         }
     }
@@ -86,7 +98,21 @@ public class JwtService {
             mac.init(new SecretKeySpec(getSigningKeyBytes(), HMAC_ALGORITHM));
             return mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
         } catch (Exception ex) {
+            logger.error("Failed to sign JWT token. Secret may not be properly configured.", ex);
             throw new IllegalStateException("Failed to sign JWT token", ex);
+        }
+    }
+
+    private byte[] getSigningKeyBytes() {
+        try {
+            String secret = jwtProperties.getSecret();
+            logger.debug("Attempting to decode JWT secret from properties");
+            byte[] decodedSecret = Base64.getDecoder().decode(secret);
+            logger.debug("Secret decoded successfully, length: {} bytes", decodedSecret.length);
+            return decodedSecret;
+        } catch (IllegalArgumentException ex) {
+            logger.error("JWT secret is not a valid base64 string. Ensure jwt.secret in application.properties is base64-encoded.", ex);
+            throw ex;
         }
     }
 
@@ -104,10 +130,6 @@ public class JwtService {
 
     private String unescapeJson(String value) {
         return value.replace("\\\"", "\"").replace("\\\\", "\\");
-    }
-
-    private byte[] getSigningKeyBytes() {
-        return Base64.getDecoder().decode(jwtProperties.getSecret());
     }
 }
 

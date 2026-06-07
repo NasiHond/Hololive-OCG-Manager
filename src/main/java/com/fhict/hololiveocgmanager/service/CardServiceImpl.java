@@ -3,6 +3,7 @@ package com.fhict.hololiveocgmanager.service;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.fhict.hololiveocgmanager.domain.Card;
@@ -56,6 +57,17 @@ public class CardServiceImpl implements CardService
         return cardRepository.findById(card.getId())
                 .map(cardMapper::toDomain)
                 .orElse(null);
+    }
+
+    @Override
+    public List<Card> searchCards(Specification<CardEntity> spec) {
+        if (spec == null) {
+            return null;
+        }
+
+        return cardRepository.findAll(spec).stream()
+                .map(cardMapper::toDomain)
+                .toList();
     }
 
     @Override

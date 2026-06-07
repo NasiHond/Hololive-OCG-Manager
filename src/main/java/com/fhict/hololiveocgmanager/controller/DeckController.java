@@ -40,7 +40,7 @@ public class DeckController {
     }
 
     @PostMapping
-    public DeckResponse createDeck(CreateDeckRequest createDeckRequest)
+    public DeckResponse createDeck(@RequestBody CreateDeckRequest createDeckRequest)
     {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof String username)) {
@@ -49,7 +49,7 @@ public class DeckController {
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("Authenticated user not found in database"));
 
-        return deckService.createDeck(createDeckRequest, user.getId());
+        return deckService.createDeck(createDeckRequest, user);
     }
 
     @GetMapping
@@ -134,7 +134,7 @@ public class DeckController {
     @PutMapping("/{deckId}/cards")
     public DeckCardResponse updateDeckCard(@PathVariable Integer deckId, @Valid @RequestBody DeckCardUpdateRequest updateRequest)
     {
-        if (updateRequest == null)
+        if (updateRequest == null || updateRequest.getCardId() == null || updateRequest.getCount() == null)
         {
             throw new BadRequestException("Update request body is required");
         }
@@ -163,7 +163,7 @@ public class DeckController {
     @PutMapping("/{deckId}")
     DeckResponse updateDeckFromUser(@PathVariable Integer deckId, @RequestBody UpdateDeckRequest updateDeckRequest)
     {
-        if (updateDeckRequest == null)
+        if (updateDeckRequest == null || updateDeckRequest.getTitle() == null || updateDeckRequest.getVisibility() == null)
         {
             throw new BadRequestException("Update request body is required");
         }

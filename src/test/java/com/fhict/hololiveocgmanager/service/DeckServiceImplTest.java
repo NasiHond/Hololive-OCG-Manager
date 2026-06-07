@@ -19,6 +19,7 @@ import com.fhict.hololiveocgmanager.mapper.DeckMapper;
 import com.fhict.hololiveocgmanager.repository.CardRepository;
 import com.fhict.hololiveocgmanager.repository.DeckCardsRepository;
 import com.fhict.hololiveocgmanager.repository.DeckRepository;
+import com.fhict.hololiveocgmanager.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -56,15 +57,19 @@ class DeckServiceImplTest {
     @Mock
     private DeckCardsRepository deckCardsRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private DeckServiceImpl deckService;
 
     @Test
     void createDeckRejectsMissingTitle() {
         CreateDeckRequest request = new CreateDeckRequest();
+        UserEntity user = userRepository.findAll().getFirst();
         request.setVisibility(Visibility.PUBLIC);
 
-        assertThatThrownBy(() -> deckService.createDeck(request, 1))
+        assertThatThrownBy(() -> deckService.createDeck(request, user))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Deck must have a title.");
     }
@@ -91,7 +96,9 @@ class DeckServiceImplTest {
         when(deckMapper.toDomain(entity)).thenReturn(domain);
         when(deckMapper.toResponse(domain)).thenReturn(response);
 
-        DeckResponse result = deckService.createDeck(request, 1);
+        UserEntity user = userRepository.findAll().getFirst();
+
+        DeckResponse result = deckService.createDeck(request, user);
 
         assertThat(result.getId()).isEqualTo(1);
         assertThat(result.getTitle()).isEqualTo("Deck");

@@ -10,5 +10,5 @@ import lombok.*;
 public class CollectionCardUpdateRequest {
     private Integer collectionId;
     private Integer cardId;
-    private Integer amount;
+    private Integer count;
 }

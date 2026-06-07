@@ -8,12 +8,14 @@ import com.fhict.hololiveocgmanager.entity.UserEntity;
 import com.fhict.hololiveocgmanager.mapper.UserMapper;
 import com.fhict.hololiveocgmanager.repository.CollectionRepository;
 import com.fhict.hololiveocgmanager.repository.UserRepository;
+import java.util.logging.Logger;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +25,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final CollectionRepository collectionRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+
+    Logger logger = Logger.getLogger(getClass().getName());
 
     public UserServiceImpl(UserMapper userMapper, UserRepository userRepository, CollectionRepository collectionRepository, BCryptPasswordEncoder passwordEncoder) {
         this.userMapper = userMapper;

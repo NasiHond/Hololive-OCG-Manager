@@ -2,16 +2,21 @@ package com.fhict.hololiveocgmanager.controller;
 
 import com.fhict.hololiveocgmanager.dto.request.CollectionCardUpdateRequest;
 import com.fhict.hololiveocgmanager.dto.response.CollectionCardResponse;
-import com.fhict.hololiveocgmanager.dto.response.CollectionCardsPageResponse;
+import com.fhict.hololiveocgmanager.dto.response.CollectionResponse;
 import com.fhict.hololiveocgmanager.entity.UserEntity;
 import com.fhict.hololiveocgmanager.service.CollectionService;
 import com.fhict.hololiveocgmanager.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import com.fhict.hololiveocgmanager.exception.BadRequestException;
 import com.fhict.hololiveocgmanager.exception.ForbiddenException;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/collections")
@@ -26,89 +31,89 @@ public class CollectionController {
     }
 
     @GetMapping("/{userId}")
-    public CollectionCardsPageResponse getCollection(
-            @PathVariable String userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        if (userId == null || userId.isBlank()) {
-            throw new BadRequestException("userId path variable is required");
-        }
+    public CollectionResponse getCollection(@PathVariable Integer userId)
+    {
+        Optional<UserEntity> currentUser = Optional.empty();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (userId.contains("${") || userId.contains("}")) {
-            throw new BadRequestException("Invalid userId format");
-        }
+        if (authentication != null
+                && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getName())) {
 
-        int parsedUserId;
-        try {
-            parsedUserId = Integer.parseInt(userId);
-        } catch (NumberFormatException _) {
-            throw new BadRequestException("userId must be a number");
+            currentUser = userRepository.findByUsername(authentication.getName());
         }
+        return collectionService.getCollectionByUserId(userId, currentUser);
+    }
 
-        return collectionService.getCollectionByUserId(parsedUserId, page, size);
+    @GetMapping("/{userId}/cards")
+    public Page<CollectionCardResponse> getCollectionCards(@PathVariable Integer userId, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Optional<UserEntity> currentUser = Optional.empty();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null
+                && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getName())) {
+
+            currentUser = userRepository.findByUsername(authentication.getName());
+        }
+        return collectionService.getCollectionCards(userId, currentUser, pageable);
     }
 
     @GetMapping("/{userId}/{cardId}")
     public CollectionCardResponse getCollectionCard(
-            @PathVariable String userId,
-            @PathVariable String cardId) {
-        if (userId == null || userId.isBlank()) {
-            throw new BadRequestException("userId path variable is required");
+            @PathVariable Integer userId,
+            @PathVariable Integer cardId) {
+        if (userId == null || cardId == null) {
+            throw new BadRequestException("User ID and Card ID are required");
         }
 
-        if (cardId == null || cardId.isBlank()) {
-            throw new BadRequestException("cardId path variable is required");
+        Optional<UserEntity> currentUser = Optional.empty();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null
+                && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getName())) {
+
+            currentUser = userRepository.findByUsername(authentication.getName());
         }
 
-        if (userId.contains("${") || userId.contains("}")) {
-            throw new BadRequestException("Invalid userId format");
-        }
-
-        if (cardId.contains("${") || cardId.contains("}")) {
-            throw new BadRequestException("Invalid cardId format");
-        }
-
-        int parsedUserId;
-        try {
-            parsedUserId = Integer.parseInt(userId);
-        } catch (NumberFormatException _) {
-            throw new BadRequestException("userId must be a number");
-        }
-
-        int parsedCardId;
-        try {
-            parsedCardId = Integer.parseInt(cardId);
-        } catch (NumberFormatException _) {
-            throw new BadRequestException("cardId must be a number");
-        }
-
-        return collectionService.getCollectionCardByUserIdAndCardId(parsedUserId, parsedCardId);
+        return collectionService.getCollectionCardByUserIdAndCardId(userId, cardId, currentUser);
     }
 
     @PutMapping("/{userId}/cards")
     public ResponseEntity<CollectionCardResponse> updateCollectionCard(
-            @PathVariable String userId,
+            @PathVariable Integer userId,
             @RequestBody CollectionCardUpdateRequest updateRequest
-    ){
+    ) {
         if (updateRequest == null) {
             throw new BadRequestException("CollectionCardUpdateRequest body is required");
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof String)) {
+
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getName())) {
             throw new ForbiddenException("User is not authenticated");
         }
 
-        String username = (String) authentication.getPrincipal();
-        Integer authenticatedUserId = userRepository.findByUsername(username)
-                .map(UserEntity::getId)
-                .orElseThrow(() -> new ForbiddenException("User is not authorized"));
+        UserEntity currentUser = userRepository
+                .findByUsername(authentication.getName())
+                .orElseThrow(() -> new ForbiddenException("User not found"));
 
-        CollectionCardResponse updated = collectionService.updateCollectionCardByUserId(
-                authenticatedUserId,
-                updateRequest.getCollectionId(),
-                updateRequest.getCardId(),
-                updateRequest.getAmount());
+        if (!currentUser.getId().equals(userId)) {
+            throw new ForbiddenException("User is not allowed to modify this resource");
+        }
+
+        CollectionCardResponse updated =
+                collectionService.updateCollectionCardByUserId(
+                        userId,
+                        updateRequest.getCollectionId(),
+                        updateRequest.getCardId(),
+                        updateRequest.getCount()
+                );
+
         return ResponseEntity.ok(updated);
     }
 }

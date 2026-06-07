@@ -2,6 +2,8 @@ package com.fhict.hololiveocgmanager.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
@@ -25,6 +27,8 @@ public class GlobalExceptionHandler {
 	private static final URI TYPE_FORBIDDEN = URI.create("urn:problem-type:forbidden");
 	private static final URI TYPE_NOT_FOUND = URI.create("urn:problem-type:not-found");
 	private static final URI TYPE_INTERNAL_SERVER_ERROR = URI.create("urn:problem-type:internal-server-error");
+
+	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
 	@ExceptionHandler(ApiException.class)
 	public ProblemDetail handleApiException(ApiException ex, HttpServletRequest request) {
@@ -116,6 +120,7 @@ public class GlobalExceptionHandler {
 		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error");
 		problemDetail.setType(TYPE_INTERNAL_SERVER_ERROR);
 		problemDetail.setTitle("Internal Server Error");
+		log.error("Unexpected error", ex);
 		applyStandardProperties(problemDetail, request);
 		return problemDetail;
 	}

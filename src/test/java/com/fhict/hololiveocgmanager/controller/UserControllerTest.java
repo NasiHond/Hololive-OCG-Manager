@@ -79,7 +79,7 @@ class UserControllerTest {
         mockMvc.perform(get("/api/users/7"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.ID").value(7))
+                .andExpect(jsonPath("$.id").value(7))
                 .andExpect(jsonPath("$.username").value("user7"))
                 .andExpect(jsonPath("$.email").value("user7@example.com"))
                 .andExpect(jsonPath("$.bio").value("Bio"));
@@ -110,7 +110,7 @@ class UserControllerTest {
                         .param("username", "ina"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.content[0].ID").value(2))
+                .andExpect(jsonPath("$.content[0].id").value(2))
                 .andExpect(jsonPath("$.content[0].username").value("ina"));
     }
 
@@ -181,7 +181,7 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.ID").value(5))
+                .andExpect(jsonPath("$.id").value(5))
                 .andExpect(jsonPath("$.username").value("newname"))
                 .andExpect(jsonPath("$.email").value("new@example.com"))
                 .andExpect(jsonPath("$.bio").value("New bio"));
@@ -220,7 +220,7 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.ID").value(10))
+                .andExpect(jsonPath("$.id").value(10))
                 .andExpect(jsonPath("$.username").value("newuser"))
                 .andExpect(jsonPath("$.email").value("newuser@example.com"))
                 .andExpect(jsonPath("$.bio").value("Bio"));

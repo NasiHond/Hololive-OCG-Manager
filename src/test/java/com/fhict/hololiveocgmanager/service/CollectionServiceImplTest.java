@@ -3,7 +3,7 @@ package com.fhict.hololiveocgmanager.service;
 import com.fhict.hololiveocgmanager.domain.Card;
 import com.fhict.hololiveocgmanager.domain.Visibility;
 import com.fhict.hololiveocgmanager.dto.response.CollectionCardResponse;
-import com.fhict.hololiveocgmanager.dto.response.CollectionCardsPageResponse;
+import com.fhict.hololiveocgmanager.dto.response.CollectionResponse;
 import com.fhict.hololiveocgmanager.entity.CardEntity;
 import com.fhict.hololiveocgmanager.entity.CardtagEntity;
 import com.fhict.hololiveocgmanager.entity.CardtypeEntity;
@@ -21,7 +21,6 @@ import com.fhict.hololiveocgmanager.repository.CollectionCardsRepository;
 import com.fhict.hololiveocgmanager.repository.CollectionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -62,7 +61,7 @@ class CollectionServiceImplTest {
     void getCollectionByUserIdRejectsMissingCollection() {
         when(collectionRepository.findByOwnerId_Id(10)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> collectionService.getCollectionByUserId(10, 0, 20))
+        assertThatThrownBy(() -> collectionService.getCollectionByUserId(10, null))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Collection not found for user");
     }
@@ -86,39 +85,13 @@ class CollectionServiceImplTest {
                 .thenReturn(new PageImpl<>(List.of(cardRow), PageRequest.of(0, 20), 1));
         when(collectionCardsRepository.sumCardCountByCollectionId_Id(1)).thenReturn(5L);
 
-        CollectionCardsPageResponse response = collectionService.getCollectionByUserId(3, 0, 20);
+        CollectionResponse response = collectionService.getCollectionByUserId(3, null);
 
-        assertThat(response.getCollection().getId()).isEqualTo(1);
-        assertThat(response.getCollection().getOwnerId()).isEqualTo(3);
-        assertThat(response.getCollection().getVisibility()).isEqualTo(Visibility.PUBLIC);
-        assertThat(response.getCollection().getTotalCards()).isEqualTo(1);
-        assertThat(response.getCollection().getTotalCount()).isEqualTo(5);
-        assertThat(response.getCards()).hasSize(1);
-        assertThat(response.getCards().getFirst().getCardId()).isEqualTo("H-001");
-        assertThat(response.getCards().getFirst().getCardTypeName()).isEqualTo("Support");
-        assertThat(response.getCards().getFirst().getCardColour()).isEqualTo("Blue");
-        assertThat(response.getCards().getFirst().getKeyword().getName()).isEqualTo("Bloom");
-    }
-
-    @Test
-    void getCollectionCardByUserIdAndCardIdRejectsMissingCollection() {
-        when(collectionRepository.findByOwnerId_Id(3)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> collectionService.getCollectionCardByUserIdAndCardId(3, 1))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("Collection not found for user");
-    }
-
-    @Test
-    void getCollectionCardByUserIdAndCardIdRejectsMissingCard() {
-        CollectionEntity collection = CollectionEntity.builder().id(1).ownerId(UserEntity.builder().id(3).build()).build();
-
-        when(collectionRepository.findByOwnerId_Id(3)).thenReturn(Optional.of(collection));
-        when(collectionCardsRepository.findByCollectionId_IdAndCardId_Id(1, 99)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> collectionService.getCollectionCardByUserIdAndCardId(3, 99))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("Card not found in collection");
+        assertThat(response.getId()).isEqualTo(1);
+        assertThat(response.getOwner().getId()).isEqualTo(3);
+        assertThat(response.getVisibility()).isEqualTo(Visibility.PUBLIC);
+        assertThat(response.getTotalCards()).isEqualTo(1);
+        assertThat(response.getTotalCount()).isEqualTo(5);
     }
 
     @Test

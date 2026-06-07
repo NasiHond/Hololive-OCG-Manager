@@ -6,6 +6,7 @@ import com.fhict.hololiveocgmanager.dto.request.UpdateDeckRequest;
 import com.fhict.hololiveocgmanager.dto.response.DeckCardResponse;
 import com.fhict.hololiveocgmanager.dto.response.DeckPageResponse;
 import com.fhict.hololiveocgmanager.dto.response.DeckResponse;
+import com.fhict.hololiveocgmanager.entity.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,9 +15,11 @@ import java.util.List;
 
 @Service
 public interface DeckService {
-    DeckResponse createDeck(CreateDeckRequest createDeckRequest, Integer userId);
+    DeckResponse createDeck(CreateDeckRequest createDeckRequest, UserEntity user);
 
     Page<DeckResponse> getDecksByUser(Integer userId, Pageable pageable);
+
+    DeckResponse getDeckById(Integer deckId);
 
     List<DeckCardResponse> getDeckCardsByCardIdAndUserId(Integer cardId,  Integer userId);
 

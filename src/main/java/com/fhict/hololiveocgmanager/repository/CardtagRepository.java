@@ -1,7 +1,7 @@
 package com.fhict.hololiveocgmanager.repository;
 
 import com.fhict.hololiveocgmanager.entity.CardtagEntity;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CardtagRepository extends CrudRepository<CardtagEntity, Integer> {
+public interface CardtagRepository extends JpaRepository<CardtagEntity, Integer> {
 }
