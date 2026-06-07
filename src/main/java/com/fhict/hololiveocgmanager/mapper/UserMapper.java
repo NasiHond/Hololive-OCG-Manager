@@ -1,6 +1,7 @@
 package com.fhict.hololiveocgmanager.mapper;
 
 import com.fhict.hololiveocgmanager.domain.User;
+import com.fhict.hololiveocgmanager.dto.response.UserResponse;
 import com.fhict.hololiveocgmanager.entity.UserEntity;
 import org.springframework.stereotype.Component;
 
@@ -29,5 +30,14 @@ public class UserMapper {
                 .bio(userEntity.getBio())
                 .profileImageURL(userEntity.getProfileImageUrl())
                 .build();
+    }
+
+    public UserResponse toResponse(User user) {
+        UserResponse.UserResponseBuilder builder = UserResponse.builder();
+        builder.id(user.getId());
+        builder.username(user.getUsername());
+        builder.email(user.getEmail());
+        builder.bio(user.getBio());
+        return builder.build();
     }
 }

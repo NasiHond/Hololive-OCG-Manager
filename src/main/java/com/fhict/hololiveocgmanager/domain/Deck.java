@@ -18,6 +18,6 @@ public class Deck {
 
     public Boolean isValidForCreate()
     {
-        return name != null && visibility != null;
+        return name != null && !name.isEmpty() && visibility != null;
     }
 }

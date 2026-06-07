@@ -2,9 +2,9 @@ package com.fhict.hololiveocgmanager.controller;
 
 import com.fhict.hololiveocgmanager.dto.request.CollectionCardUpdateRequest;
 import com.fhict.hololiveocgmanager.dto.response.CollectionCardResponse;
-import com.fhict.hololiveocgmanager.dto.response.CollectionCardsPageResponse;
 import com.fhict.hololiveocgmanager.dto.response.CollectionResponse;
 import com.fhict.hololiveocgmanager.domain.Visibility;
+import com.fhict.hololiveocgmanager.dto.response.UserResponse;
 import com.fhict.hololiveocgmanager.entity.UserEntity;
 import com.fhict.hololiveocgmanager.exception.GlobalExceptionHandler;
 import com.fhict.hololiveocgmanager.repository.UserRepository;
@@ -26,7 +26,6 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -55,6 +54,15 @@ class CollectionControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(new CollectionController(collectionService, userRepository))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setValidator(validator)
+                .build();
+    }
+
+    public static UserResponse userResponse() {
+        return UserResponse.builder()
+                .id(3)
+                .username("testuser")
+                .email("test@mail.com")
+                .bio("bio")
                 .build();
     }
 
@@ -90,29 +98,16 @@ class CollectionControllerTest {
     }
 
     @Test
-    void getCollectionReturnsPage() throws Exception {
-        CollectionCardsPageResponse response = CollectionCardsPageResponse.builder()
-                .collection(CollectionResponse.builder()
-                        .id(10)
-                        .ownerId(3)
-                        .visibility(Visibility.PUBLIC)
-                        .totalCards(2)
-                        .totalCount(5)
-                        .build())
-                .cards(List.of(CollectionCardResponse.builder()
-                        .cardId("H-001")
-                        .cardCount(2)
-                        .name("Ina")
-                        .build()))
-                .page(0)
-                .size(20)
-                .last(true)
-                .totalElements(1)
-                .hasMore(false)
-                .totalPages(1)
+    void getCollectionReturnsCollection() throws Exception {
+        CollectionResponse response = CollectionResponse.builder()
+                .id(1)
+                .owner(userResponse())
+                .visibility(Visibility.PUBLIC)
+                .totalCards(1)
+                .totalCount(10)
                 .build();
 
-        when(collectionService.getCollectionByUserId(3, 0, 20)).thenReturn(response);
+        when(collectionService.getCollectionByUserId(3, null)).thenReturn(response);
 
         mockMvc.perform(get("/api/collections/3"))
                 .andExpect(status().isOk())
@@ -147,7 +142,7 @@ class CollectionControllerTest {
         CollectionCardUpdateRequest request = CollectionCardUpdateRequest.builder()
                 .collectionId(1)
                 .cardId(2)
-                .amount(1)
+                .count(1)
                 .build();
 
         mockMvc.perform(put("/api/collections/1/cards")
@@ -168,7 +163,7 @@ class CollectionControllerTest {
         CollectionCardUpdateRequest request = CollectionCardUpdateRequest.builder()
                 .collectionId(1)
                 .cardId(2)
-                .amount(1)
+                .count(1)
                 .build();
 
         mockMvc.perform(put("/api/collections/1/cards")
@@ -198,7 +193,7 @@ class CollectionControllerTest {
         CollectionCardUpdateRequest request = CollectionCardUpdateRequest.builder()
                 .collectionId(1)
                 .cardId(2)
-                .amount(3)
+                .count(3)
                 .build();
 
         mockMvc.perform(put("/api/collections/1/cards")

@@ -6,10 +6,13 @@ import com.fhict.hololiveocgmanager.domain.Tag;
 import com.fhict.hololiveocgmanager.dto.response.CardResponse;
 import com.fhict.hololiveocgmanager.dto.response.KeywordResponse;
 import com.fhict.hololiveocgmanager.dto.response.TagResponse;
+import com.fhict.hololiveocgmanager.exception.NotFoundException;
 import com.fhict.hololiveocgmanager.mapper.CardMapper;
 import com.fhict.hololiveocgmanager.repository.*;
+import com.fhict.hololiveocgmanager.service.CardService;
 import com.fhict.hololiveocgmanager.specification.CardSpecification;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
@@ -22,10 +25,12 @@ import java.util.List;
 public class CardController {
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
+    private final CardService cardService;
 
-    public CardController(CardRepository cardRepository, CardMapper cardMapper) {
+    public CardController(CardRepository cardRepository, CardMapper cardMapper, CardService cardService) {
         this.cardRepository = cardRepository;
         this.cardMapper = cardMapper;
+        this.cardService = cardService;
     }
 
     /**
@@ -62,11 +67,15 @@ public class CardController {
             @RequestParam(defaultValue = "20") int size) {
 
         Pageable pageable = PageRequest.of(page, size);
+
         var normalizedParallel = parallel == null || parallel.isBlank() ? null : parallel.trim();
         var spec = CardSpecification.withFilters(cardName, bloomLvl, colour, cardSet, rarity, cardType, holomem, normalizedParallel);
-        return cardRepository.findAll(spec, pageable)
-                .map(this::entityToDomain)
-                .map(this::toResponse);
+        List<CardResponse> cards = cardService.searchCards(spec).stream().map(this::toResponse).toList();
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), cards.size());
+
+        List<CardResponse> pageContent = cards.subList(start, end);
+        return new PageImpl<>(pageContent, pageable, cards.size());
     }
 
     /**
@@ -77,7 +86,7 @@ public class CardController {
         return cardRepository.findById(id)
                 .map(this::entityToDomain)
                 .map(this::toResponse)
-                .orElseThrow(() -> new RuntimeException("Card not found"));
+                .orElseThrow(() -> new NotFoundException("Card not found"));
     }
 
 

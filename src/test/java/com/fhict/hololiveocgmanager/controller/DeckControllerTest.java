@@ -121,7 +121,9 @@ class DeckControllerTest {
                 .visibility(Visibility.PUBLIC)
                 .build();
 
-        when(deckService.createDeck(any(CreateDeckRequest.class), eq(5))).thenReturn(response);
+        UserEntity user = userRepository.findAll().getFirst();
+
+        when(deckService.createDeck(any(CreateDeckRequest.class), user)).thenReturn(response);
 
         mockMvc.perform(post("/api/decks")
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)

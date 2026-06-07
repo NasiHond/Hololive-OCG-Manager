@@ -10,6 +10,7 @@ import com.fhict.hololiveocgmanager.entity.ColourEntity;
 import com.fhict.hololiveocgmanager.exception.GlobalExceptionHandler;
 import com.fhict.hololiveocgmanager.mapper.CardMapper;
 import com.fhict.hololiveocgmanager.repository.CardRepository;
+import com.fhict.hololiveocgmanager.service.CardService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +32,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -44,6 +46,9 @@ class CardControllerTest {
     @Mock
     private CardMapper cardMapper;
 
+    @Mock
+    private CardService cardService;
+
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -51,7 +56,7 @@ class CardControllerTest {
         LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
         validator.afterPropertiesSet();
 
-        mockMvc = MockMvcBuilders.standaloneSetup(new CardController(cardRepository, cardMapper))
+        mockMvc = MockMvcBuilders.standaloneSetup(new CardController(cardRepository, cardMapper, cardService))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setValidator(validator)
                 .build();
@@ -91,8 +96,9 @@ class CardControllerTest {
         when(cardMapper.toDomain(entity)).thenReturn(domain);
 
         mockMvc.perform(get("/api/cards/search")
-                        .param("cardName", "Ina")
-                        .param("parallel", "  "))
+                        .param("holomem", "Ina")
+                        .param("parallel", "true"))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.content[0].cardId").value("H-001"));
@@ -113,15 +119,15 @@ class CardControllerTest {
     }
 
     @Test
-    void getCardByIdReturnsServerErrorWhenMissing() throws Exception {
+    void getCardByIdReturnsNotFoundWhenMissing() throws Exception {
         when(cardRepository.findById(anyInt())).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/cards/999"))
-                .andExpect(status().isInternalServerError())
+                .andExpect(status().isNotFound())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
-                .andExpect(jsonPath("$.title").value("Internal Server Error"))
-                .andExpect(jsonPath("$.detail").value("Unexpected error"))
-                .andExpect(jsonPath("$.type").value("urn:problem-type:internal-server-error"));
+                .andExpect(jsonPath("$.title").value("Not Found"))
+                .andExpect(jsonPath("$.detail").value("Card not found"))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:not-found"));
     }
 
     private Card sampleCardDomain() {

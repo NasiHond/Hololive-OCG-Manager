@@ -53,7 +53,7 @@ public class CardEntity {
     @Column(name = "holomem", nullable = false, length = Integer.MAX_VALUE)
     private String holomem;
 
-    @Column(name = "bloomlvl", nullable = false, length = Integer.MAX_VALUE)
+    @Column(name = "bloomlvl", nullable = false, length = Integer.MAX_VALUE, columnDefinition = "TEXT")
     private String bloomlvl;
 
     @Column(name = "hp", nullable = false)

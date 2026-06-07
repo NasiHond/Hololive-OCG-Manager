@@ -9,7 +9,7 @@ import java.util.List;
 @Builder
 public class CollectionCardResponse {
     private Integer id;
-    private Integer collectionCardId;
+    private CollectionResponse collection;
     private String cardId;
     private String name;
     private String imageUrl;

@@ -8,7 +8,7 @@ import com.fhict.hololiveocgmanager.domain.Visibility;
 @Builder
 public class CollectionResponse {
     private Integer id;
-    private Integer ownerId;
+    private UserResponse owner;
     private Visibility visibility;
     private Integer totalCards;
     private Integer totalCount;

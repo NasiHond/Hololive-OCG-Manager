@@ -11,6 +11,7 @@ import com.fhict.hololiveocgmanager.dto.response.DeckResponse;
 import com.fhict.hololiveocgmanager.entity.CardEntity;
 import com.fhict.hololiveocgmanager.entity.DeckCardsEntity;
 import com.fhict.hololiveocgmanager.entity.DeckEntity;
+import com.fhict.hololiveocgmanager.entity.UserEntity;
 import com.fhict.hololiveocgmanager.exception.BadRequestException;
 import com.fhict.hololiveocgmanager.exception.NotFoundException;
 import com.fhict.hololiveocgmanager.mapper.CardMapper;
@@ -43,7 +44,7 @@ public class DeckServiceImpl implements DeckService
     }
 
     @Override
-    public DeckResponse createDeck(CreateDeckRequest createRequest, Integer userId)
+    public DeckResponse createDeck(CreateDeckRequest createRequest, UserEntity user)
     {
         Deck.DeckBuilder deckBuilder = Deck.builder();
         deckBuilder.name(createRequest.getTitle());
@@ -52,9 +53,9 @@ public class DeckServiceImpl implements DeckService
         deckBuilder.deckImageUrl(createRequest.getDeckImageUrl());
         Deck deck = deckBuilder.build();
 
-        if (deck.isValidForCreate()) {
+        if (Boolean.TRUE.equals(deck.isValidForCreate())) {
             DeckEntity deckEntity = deckMapper.toEntity(deck);
-            deckEntity.getCreatorId().setId(userId);
+            deckEntity.setCreatorId(user);
             DeckEntity savedDeck = deckRepository.save(deckEntity);
             return deckMapper.toResponse(deckMapper.toDomain(savedDeck));
         } else {
@@ -83,6 +84,15 @@ public class DeckServiceImpl implements DeckService
         return deckRepository.findAllByCreatorId_Id(userId, pageable)
                 .map(deckMapper::toDomain)
                 .map(deckMapper::toResponse);
+    }
+
+    @Override
+    public DeckResponse getDeckById(Integer deckId)
+    {
+        return deckRepository.findById(deckId)
+                .map(deckMapper::toDomain)
+                .map(deckMapper::toResponse)
+                .orElseThrow(() -> new NotFoundException("Deck not found with id: " + deckId));
     }
 
     @Override
