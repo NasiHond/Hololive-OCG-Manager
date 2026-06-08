@@ -207,11 +207,13 @@ class DeckControllerIntegrationTest {
         UserEntity user = userRepository.findAll().getFirst();
         String token = jwtService.generateAccessToken(user.getUsername());
         DeckEntity deck = deckRepository.findAll().getFirst();
-        mockMvc.perform(get("/api/decks/cards/{deckId}", deck.getId())
+        CardEntity card = cardRepository.findAll().getFirst();
+        mockMvc.perform(get("/api/decks/cards/{cardId}", card.getId())
                         .header("Authorization", "Bearer " + token))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].cardID").value("HL-002"));
+                .andExpect(jsonPath("$[0].cardID").value(card.getCardid()))
+                .andExpect(jsonPath("$[0].deckId").value(deck.getId()));
     }
 
     @Test
