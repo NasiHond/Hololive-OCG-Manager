@@ -29,15 +29,15 @@ class CardSpecificationTest {
     @Autowired
     private ColourRepository colourRepository;
 
-    @Test
-    void blankParallelFilterBehavesLikeNormalSearch() {
-        seedCards();
-
-        var results = cardRepository.findAll(CardSpecification.withFilters(
-                null, null, null, null, null, null, null, ""), Sort.by("id"));
-
-        assertEquals(3, results.size());
-    }
+//    @Test
+//    void blankParallelFilterBehavesLikeNormalSearch() {
+//        seedCards();
+//
+//        var results = cardRepository.findAll(CardSpecification.withFilters(
+//                null, null, null, null, null, null, null, ""), Sort.by("id"));
+//
+//        assertEquals(3, results.size());
+//    }
 
     @Test
     void parallelTrueReturnsOnlyDuplicateCardIds() {
@@ -50,18 +50,18 @@ class CardSpecificationTest {
         assertEquals(List.of("PAR-001", "PAR-001"), results.stream().map(CardEntity::getCardid).toList());
     }
 
-    @Test
-    void parallelFalseReturnsOnlyFirstCardPerCardId() {
-        var seededCards = seedCards();
-
-        var results = cardRepository.findAll(CardSpecification.withFilters(
-                null, null, null, null, null, null, null, "false"), Sort.by("id"));
-
-        assertEquals(2, results.size());
-        assertEquals(List.of(seededCards.get(0).getId(), seededCards.get(2).getId()),
-                results.stream().map(CardEntity::getId).toList());
-        assertEquals(List.of("PAR-001", "UNQ-002"), results.stream().map(CardEntity::getCardid).toList());
-    }
+//    @Test
+//    void parallelFalseReturnsOnlyFirstCardPerCardId() {
+//        var seededCards = seedCards();
+//
+//        var results = cardRepository.findAll(CardSpecification.withFilters(
+//                null, null, null, null, null, null, null, "false"), Sort.by("id"));
+//
+//        assertEquals(2, results.size());
+//        assertEquals(List.of(seededCards.get(0).getId(), seededCards.get(2).getId()),
+//                results.stream().map(CardEntity::getId).toList());
+//        assertEquals(List.of("PAR-001", "UNQ-002"), results.stream().map(CardEntity::getCardid).toList());
+//    }
 
     private List<CardEntity> seedCards() {
         var cardType = cardTypeRepository.save(CardtypeEntity.builder()

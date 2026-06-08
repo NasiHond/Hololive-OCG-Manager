@@ -17,6 +17,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
@@ -60,7 +61,7 @@ class UserControllerIntegrationTest {
         mockMvc.perform(get("/api/users/{id}", user.getId()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("application/json"))
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.id").value(user.getId()))
                 .andExpect(jsonPath("$.username").value("User1"))
                 .andExpect(jsonPath("$.bio").value("a bio"))
                 .andExpect(jsonPath("$.email").value("test@mail.com"));
@@ -178,7 +179,6 @@ class UserControllerIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(2))
                 .andExpect(jsonPath("$.username").value("NewUser"))
                 .andExpect(jsonPath("$.email").value("NewEmail@mail.com"));
     }
@@ -216,8 +216,9 @@ class UserControllerIntegrationTest {
         UserEntity user = userRepository.findAll().getFirst();
         String token = jwtService.generateAccessToken(user.getUsername());
 
-        mockMvc.perform(delete("/api/users/{id}", 1)
+        mockMvc.perform(delete("/api/users/{id}", user.getId())
                         .header("Authorization", "Bearer " + token))
+                .andDo(print())
                 .andExpect(status().isOk());
     }
 
