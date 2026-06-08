@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/reviews")
-@CrossOrigin(origins = {"http://localhost:5173", "http://145.220.72.119"}, allowCredentials = "true")
+@CrossOrigin(origins = "{app.cors.allowed-origins}", allowCredentials = "true")
 public class ReviewController {
     private final UserRepository userRepository;
     private final ReviewService reviewService;
