@@ -41,11 +41,11 @@ jobs:
 
       - name: Push image
         run: |
-          docker tag myapp:${{ github.sha }} \
-            ${{ secrets.DOCKER_USERNAME }}/myapp:latest
+          docker tag hololiveocgmanager:${{ github.sha }} \
+            ${{ secrets.DOCKER_USERNAME }}/hololiveocgmanager:latest
 
           docker push \
-            ${{ secrets.DOCKER_USERNAME }}/myapp:latest
+            ${{ secrets.DOCKER_USERNAME }}/hololiveocgmanager:latest
 
       - name: Deploy
         uses: appleboy/ssh-action@v1.0.3
