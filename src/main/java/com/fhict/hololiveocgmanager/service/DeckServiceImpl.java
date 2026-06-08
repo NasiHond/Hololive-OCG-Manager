@@ -1,11 +1,13 @@
 package com.fhict.hololiveocgmanager.service;
 
 import com.fhict.hololiveocgmanager.domain.Deck;
+import com.fhict.hololiveocgmanager.domain.DeckEventType;
 import com.fhict.hololiveocgmanager.domain.Visibility;
 import com.fhict.hololiveocgmanager.dto.request.CreateDeckRequest;
 import com.fhict.hololiveocgmanager.dto.request.DeckCardUpdateRequest;
 import com.fhict.hololiveocgmanager.dto.request.UpdateDeckRequest;
 import com.fhict.hololiveocgmanager.dto.response.DeckCardResponse;
+import com.fhict.hololiveocgmanager.dto.response.DeckCardUpdatedEvent;
 import com.fhict.hololiveocgmanager.dto.response.DeckPageResponse;
 import com.fhict.hololiveocgmanager.dto.response.DeckResponse;
 import com.fhict.hololiveocgmanager.entity.CardEntity;
@@ -21,6 +23,7 @@ import com.fhict.hololiveocgmanager.repository.DeckCardsRepository;
 import com.fhict.hololiveocgmanager.repository.DeckRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -34,13 +37,15 @@ public class DeckServiceImpl implements DeckService
     private final CardMapper cardMapper;
     private final CardRepository cardRepository;
     private final DeckCardsRepository deckCardsRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public DeckServiceImpl(DeckRepository deckRepository, DeckMapper deckMapper, CardMapper cardMapper, CardRepository cardRepository, DeckCardsRepository deckCardsRepository) {
+    public DeckServiceImpl(DeckRepository deckRepository, DeckMapper deckMapper, CardMapper cardMapper, CardRepository cardRepository, DeckCardsRepository deckCardsRepository, SimpMessagingTemplate messagingTemplate) {
         this.deckRepository = deckRepository;
         this.deckMapper = deckMapper;
         this.cardMapper = cardMapper;
         this.cardRepository = cardRepository;
         this.deckCardsRepository = deckCardsRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Override
@@ -156,12 +161,40 @@ public class DeckServiceImpl implements DeckService
             DeckCardsEntity existing = opt.get();
             if (updateRequest.getCount() == 0) {
                 deckCardsRepository.delete(existing);
-                return getDeckCardResponse(cardEntity, deckEntity, updateRequest.getCount());
+
+                DeckCardResponse deckCardResponse = getDeckCardResponse(cardEntity, deckEntity, updateRequest.getCount());
+
+                //Send WebSocket DeckEventType:CARD_REMOVED
+                messagingTemplate.convertAndSend(
+                        "/topic/decks/" + deckId,
+                        new DeckCardUpdatedEvent(
+                                deckId,
+                                DeckEventType.CARD_REMOVED,
+                                deckCardResponse,
+                                deckEntity.getCreatorId().getId()
+                        )
+                );
+
+                return deckCardResponse;
             }
 
             existing.setCardCount(updateRequest.getCount());
             deckCardsRepository.save(existing);
-            return getDeckCardResponse(cardEntity, deckEntity, updateRequest.getCount());
+
+            DeckCardResponse cardResponse = getDeckCardResponse(cardEntity, deckEntity, updateRequest.getCount());
+
+            //Send WebSocket DeckEventType:CARD_UPDATED
+            messagingTemplate.convertAndSend(
+                    "/topic/decks/" + deckId,
+                    new DeckCardUpdatedEvent(
+                            deckId,
+                            DeckEventType.CARD_UPDATED,
+                            cardResponse,
+                            deckEntity.getCreatorId().getId()
+                    )
+            );
+
+            return cardResponse;
         }
 
         if (updateRequest.getCount() == 0) {
@@ -174,7 +207,21 @@ public class DeckServiceImpl implements DeckService
                 .cardCount(updateRequest.getCount())
                 .build();
         deckCardsRepository.save(created);
-        return getDeckCardResponse(cardEntity, deckEntity, updateRequest.getCount());
+
+        DeckCardResponse cardResponse = getDeckCardResponse(cardEntity, deckEntity, updateRequest.getCount());
+
+        //Send WebSocket DeckEventType:CARD_ADDED
+        messagingTemplate.convertAndSend(
+                "/topic/decks/" + deckId,
+                new DeckCardUpdatedEvent(
+                        deckId,
+                        DeckEventType.CARD_ADDED,
+                        cardResponse,
+                        deckEntity.getCreatorId().getId()
+                )
+        );
+
+        return cardResponse;
     }
 
     @Override
