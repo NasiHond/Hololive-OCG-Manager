@@ -267,25 +267,27 @@ class DeckControllerIntegrationTest {
         UserEntity user = userRepository.findAll().getFirst();
         String token = jwtService.generateAccessToken(user.getUsername());
         DeckEntity deck = deckRepository.findAll().getFirst();
+        DeckCardsEntity deckCardsEntity = deckCardsRepository.findAll().getFirst();
         mockMvc.perform(put("/api/decks/{deckId}/cards", deck.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType("application/json")
-                        .content("""
-                                {
-                                    "cardId": 1,
-                                    "count": 30
-                                }
-                                """))
+                        .content(String.format("""
+                        {
+                            "cardId": %d,
+                            "count": 30
+                        }
+                        """, deckCardsEntity.getCardId().getId())))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.deckId").value(1))
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.deckId").value(deck.getId()))
+                .andExpect(jsonPath("$.id").value(deckCardsEntity.getCardId().getId()))
                 .andExpect(jsonPath("$.count").value(30));
     }
 
     @Test
     void shouldReturnForbiddenWhenUpdateDeckCardWhileUnauthorized() throws Exception {
-        mockMvc.perform(put("/api/decks/1/cards")
+        DeckEntity deck = deckRepository.findAll().getFirst();
+        mockMvc.perform(put("/api/decks/{deckId}/cards",  deck.getId())
                         .contentType("application/json")
                         .content("""
                                 {
@@ -299,8 +301,9 @@ class DeckControllerIntegrationTest {
     @Test
     void shouldReturnBadRequestWhenUpdateDeckCardWithMissingParameter() throws Exception {
         UserEntity user = userRepository.findAll().getFirst();
+        DeckEntity deck = deckRepository.findAll().getFirst();
         String token = jwtService.generateAccessToken(user.getUsername());
-        mockMvc.perform(put("/api/decks/1/cards")
+        mockMvc.perform(put("/api/decks/{deckId}/cards", deck.getId())
                         .header("Authorization", "Bearer " + token)
                         .contentType("application/json")
                         .content("""
@@ -335,8 +338,9 @@ class DeckControllerIntegrationTest {
     @Test
     void shouldReturnBadRequestWhenUpdateDeckWithMissingParameter() throws Exception {
         UserEntity user = userRepository.findAll().getFirst();
+        DeckEntity deck = deckRepository.findAll().getFirst();
         String token = jwtService.generateAccessToken(user.getUsername());
-        mockMvc.perform(put("/api/decks/1")
+        mockMvc.perform(put("/api/decks/{deckId}", deck.getId())
                 .header("Authorization", "Bearer " + token)
                 .contentType("application/json")
                 .content("""
@@ -350,7 +354,8 @@ class DeckControllerIntegrationTest {
 
     @Test
     void shouldReturnForbiddenWhenUpdateDeckWhileUnauthorized() throws Exception {
-        mockMvc.perform(put("/api/decks/1")
+        DeckEntity deck = deckRepository.findAll().getFirst();
+        mockMvc.perform(put("/api/decks/{deckId}", deck.getId())
                 .contentType("application/json")
                 .content("""
                         {
@@ -368,7 +373,7 @@ class DeckControllerIntegrationTest {
         userRepository.save(user2);
 
         String token = jwtService.generateAccessToken(user2.getUsername());
-        mockMvc.perform(put("/api/decks/1")
+        mockMvc.perform(put("/api/decks/{deckId}", deck.getId())
                 .header("Authorization", "Bearer " + token)
                 .contentType("application/json")
                 .content("""

@@ -81,13 +81,20 @@ public class UserController {
     public void deleteUser(@PathVariable Integer id)
     {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof String username)) {
+
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || !(authentication.getPrincipal() instanceof String username)) {
             throw new ForbiddenException("User is not authenticated");
         }
-        else if(userRepository.findByUsername(username) != userRepository.findById(id))
-        {
+
+        UserEntity authenticatedUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ForbiddenException("User is not authorized"));
+
+        if (!authenticatedUser.getId().equals(id)) {
             throw new ForbiddenException("User is not authorized");
         }
+
         userService.deleteUser(id);
     }
 
