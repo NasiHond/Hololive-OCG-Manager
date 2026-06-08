@@ -20,7 +20,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/collections")
-@CrossOrigin(origins = {"http://localhost:5173", "http://145.220.72.119"}, allowCredentials = "true")
+@CrossOrigin(origins = "{app.cors.allowed-origins}", allowCredentials = "true")
 public class CollectionController {
     private final CollectionService collectionService;
     private final UserRepository userRepository;

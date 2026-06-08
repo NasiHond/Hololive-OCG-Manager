@@ -22,7 +22,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = {"http://localhost:5173", "http://145.220.72.119"}, allowCredentials = "true")
+@CrossOrigin(origins = "{app.cors.allowed-origins}", allowCredentials = "true")
 public class UserController {
     private final UserRepository userRepository;
     private final UserService userService;
