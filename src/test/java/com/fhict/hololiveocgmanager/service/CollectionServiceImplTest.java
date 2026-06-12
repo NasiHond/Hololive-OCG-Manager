@@ -1,9 +1,11 @@
 package com.fhict.hololiveocgmanager.service;
 
 import com.fhict.hololiveocgmanager.domain.Card;
+import com.fhict.hololiveocgmanager.domain.Collection;
 import com.fhict.hololiveocgmanager.domain.Visibility;
 import com.fhict.hololiveocgmanager.dto.response.CollectionCardResponse;
 import com.fhict.hololiveocgmanager.dto.response.CollectionResponse;
+import com.fhict.hololiveocgmanager.dto.response.UserResponse;
 import com.fhict.hololiveocgmanager.entity.CardEntity;
 import com.fhict.hololiveocgmanager.entity.CardtagEntity;
 import com.fhict.hololiveocgmanager.entity.CardtypeEntity;
@@ -17,6 +19,7 @@ import com.fhict.hololiveocgmanager.exception.BadRequestException;
 import com.fhict.hololiveocgmanager.exception.ForbiddenException;
 import com.fhict.hololiveocgmanager.exception.NotFoundException;
 import com.fhict.hololiveocgmanager.mapper.CardMapper;
+import com.fhict.hololiveocgmanager.mapper.CollectionMapper;
 import com.fhict.hololiveocgmanager.repository.CollectionCardsRepository;
 import com.fhict.hololiveocgmanager.repository.CollectionRepository;
 import org.junit.jupiter.api.Test;
@@ -42,20 +45,12 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class CollectionServiceImplTest {
 
-    @Mock
-    private CollectionRepository collectionRepository;
-
-    @Mock
-    private CollectionCardsRepository collectionCardsRepository;
-
-    @Mock
-    private CardService cardService;
-
-    @Mock
-    private CardMapper cardMapper;
-
-    @InjectMocks
-    private CollectionServiceImpl collectionService;
+    @Mock private CollectionRepository collectionRepository;
+    @Mock private CollectionCardsRepository collectionCardsRepository;
+    @Mock private CardService cardService;
+    @Mock private CardMapper cardMapper;
+    @Mock private CollectionMapper collectionMapper;
+    @InjectMocks private CollectionServiceImpl collectionService;
 
     @Test
     void getCollectionByUserIdRejectsMissingCollection() {
@@ -66,33 +61,59 @@ class CollectionServiceImplTest {
                 .hasMessage("Collection not found for user");
     }
 
-//    @Test
-//    void getCollectionByUserIdReturnsPageResponse() {
-//        CollectionEntity collection = CollectionEntity.builder()
-//                .id(1)
-//                .ownerId(UserEntity.builder().id(3).build())
-//                .visibility(Visibility.PUBLIC)
-//                .build();
-//        CollectionCardsEntity cardRow = CollectionCardsEntity.builder()
-//                .id(5)
-//                .collectionId(collection)
-//                .cardId(sampleCardEntity())
-//                .cardCount(2)
-//                .build();
-//
-//        when(collectionRepository.findByOwnerId_Id(3)).thenReturn(Optional.of(collection));
-//        when(collectionCardsRepository.findByCollectionId_Id(eq(1), any(PageRequest.class)))
-//                .thenReturn(new PageImpl<>(List.of(cardRow), PageRequest.of(0, 20), 1));
-//        when(collectionCardsRepository.sumCardCountByCollectionId_Id(1)).thenReturn(5L);
-//
-//        CollectionResponse response = collectionService.getCollectionByUserId(3, null);
-//
-//        assertThat(response.getId()).isEqualTo(1);
-//        assertThat(response.getOwner().getId()).isEqualTo(3);
-//        assertThat(response.getVisibility()).isEqualTo(Visibility.PUBLIC);
-//        assertThat(response.getTotalCards()).isEqualTo(1);
-//        assertThat(response.getTotalCount()).isEqualTo(5);
-//    }
+    @Test
+    void getCollectionByUserIdReturnsPageResponse() {
+        UserEntity user = UserEntity.builder()
+                .id(3)
+                .username("testuser")
+                .passwordHash("testhash")
+                .build();
+
+        CollectionEntity collection = CollectionEntity.builder()
+                .id(1)
+                .ownerId(UserEntity.builder().id(3).build())
+                .visibility(Visibility.PUBLIC)
+                .build();
+
+        CollectionCardsEntity cardRow = CollectionCardsEntity.builder()
+                .id(5)
+                .collectionId(collection)
+                .cardId(sampleCardEntity())
+                .cardCount(2)
+                .build();
+
+        Collection domainCollection = Collection.builder()
+                .id(1)
+                .owner(com.fhict.hololiveocgmanager.domain.User.builder().id(3).build())
+                .visibility(Visibility.PUBLIC)
+                .totalCards(1)
+                .totalCount(2)
+                .build();
+
+        CollectionResponse expectedResponse = CollectionResponse.builder()
+                .id(1)
+                .owner(UserResponse.builder().id(3).build())
+                .visibility(Visibility.PUBLIC)
+                .totalCards(1)
+                .totalCount(2)
+                .build();
+
+        // Repository stubs — must match the exact argument the service passes
+        when(collectionRepository.findByOwnerId_Id(3)).thenReturn(Optional.of(collection));
+        when(collectionCardsRepository.findByCollectionId_Id(1)).thenReturn(List.of(cardRow));
+
+        // Mapper stubs — getCardCounts returns totalCards=1, totalCount=2 (cardRow.cardCount=2)
+        when(collectionMapper.toDomain(collection, 1, 2)).thenReturn(domainCollection);
+        when(collectionMapper.toResponse(domainCollection)).thenReturn(expectedResponse);
+
+        CollectionResponse response = collectionService.getCollectionByUserId(3, Optional.of(user));
+
+        assertThat(response.getId()).isEqualTo(1);
+        assertThat(response.getOwner().getId()).isEqualTo(3);
+        assertThat(response.getVisibility()).isEqualTo(Visibility.PUBLIC);
+        assertThat(response.getTotalCards()).isEqualTo(1);
+        assertThat(response.getTotalCount()).isEqualTo(2); // cardRow has cardCount=2, so sum=2
+    }
 
     @Test
     void updateCollectionCardRejectsMissingCardId() {
@@ -100,13 +121,13 @@ class CollectionServiceImplTest {
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("cardId is required");
     }
-//
-//    @Test
-//    void updateCollectionCardRejectsNegativeAmount() {
-//        assertThatThrownBy(() -> collectionService.updateCollectionCardByUserId(1, 1, 2, -1))
-//                .isInstanceOf(BadRequestException.class)
-//                .hasMessage("amount must be non-negative");
-//    }
+
+    @Test
+    void updateCollectionCardRejectsNegativeAmount() {
+        assertThatThrownBy(() -> collectionService.updateCollectionCardByUserId(1, 1, 2, -1))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("count must be non-negative");
+    }
 
     @Test
     void updateCollectionCardRejectsMissingCollection() {
@@ -116,20 +137,6 @@ class CollectionServiceImplTest {
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Collection not found");
     }
-
-//    @Test
-//    void updateCollectionCardRejectsUnauthorizedUser() {
-//        CollectionEntity collection = CollectionEntity.builder()
-//                .id(1)
-//                .ownerId(UserEntity.builder().id(2).build())
-//                .build();
-//
-//        when(collectionRepository.findById(1)).thenReturn(Optional.of(collection));
-//
-//        assertThatThrownBy(() -> collectionService.updateCollectionCardByUserId(1, 1, 2, 1))
-//                .isInstanceOf(ForbiddenException.class)
-//                .hasMessage("You do not have permission to modify this collection");
-//    }
 
     @Test
     void updateCollectionCardDeletesWhenAmountZero() {
@@ -153,56 +160,56 @@ class CollectionServiceImplTest {
         CollectionCardResponse response = collectionService.updateCollectionCardByUserId(1, 1, 2, 0);
 
         verify(collectionCardsRepository).delete(existing);
-        assertThat(response.getCardCount()).isEqualTo(0);
+        assertThat(response.getCardCount()).isZero();
         assertThat(response.getCardId()).isEqualTo("H-001");
     }
 
-//    @Test
-//    void updateCollectionCardUpdatesExistingRow() {
-//        CollectionEntity collection = CollectionEntity.builder()
-//                .id(1)
-//                .ownerId(UserEntity.builder().id(1).build())
-//                .build();
-//        CardEntity card = sampleCardEntity();
-//        CollectionCardsEntity existing = CollectionCardsEntity.builder()
-//                .id(9)
-//                .collectionId(collection)
-//                .cardId(card)
-//                .cardCount(2)
-//                .build();
-//
-//        when(collectionRepository.findById(1)).thenReturn(Optional.of(collection));
-//        when(cardService.getCardByCardId(2)).thenReturn(Card.builder().cardID("H-001").holomem("Ina").build());
-//        when(cardMapper.toEntity(any(Card.class))).thenReturn(card);
-//        when(collectionCardsRepository.findByCollectionId_IdAndCardId_Id(1, 2)).thenReturn(Optional.of(existing));
-//        when(collectionCardsRepository.save(existing)).thenReturn(existing);
-//
-//        CollectionCardResponse response = collectionService.updateCollectionCardByUserId(1, 1, 2, 4);
-//
-//        assertThat(existing.getCardCount()).isEqualTo(4);
-//        assertThat(response.getCardCount()).isEqualTo(4);
-//    }
+    @Test
+    void updateCollectionCardUpdatesExistingRow() {
+        CollectionEntity collection = CollectionEntity.builder()
+                .id(1)
+                .ownerId(UserEntity.builder().id(1).build())
+                .build();
+        CardEntity card = sampleCardEntity();
+        CollectionCardsEntity existing = CollectionCardsEntity.builder()
+                .id(9)
+                .collectionId(collection)
+                .cardId(card)
+                .cardCount(2)
+                .build();
 
-//    @Test
-//    void updateCollectionCardCreatesNewRow() {
-//        CollectionEntity collection = CollectionEntity.builder()
-//                .id(1)
-//                .ownerId(UserEntity.builder().id(1).build())
-//                .build();
-//        CardEntity card = sampleCardEntity();
-//
-//        when(collectionRepository.findById(1)).thenReturn(Optional.of(collection));
-//        when(cardService.getCardByCardId(2)).thenReturn(Card.builder().cardID("H-001").holomem("Ina").build());
-//        when(cardMapper.toEntity(any(Card.class))).thenReturn(card);
-//        when(collectionCardsRepository.findByCollectionId_IdAndCardId_Id(1, 2)).thenReturn(Optional.empty());
-//        when(collectionCardsRepository.save(any(CollectionCardsEntity.class)))
-//                .thenAnswer(invocation -> invocation.getArgument(0));
-//
-//        CollectionCardResponse response = collectionService.updateCollectionCardByUserId(1, 1, 2, 2);
-//
-//        assertThat(response.getCardCount()).isEqualTo(2);
-//        assertThat(response.getCardId()).isEqualTo("H-001");
-//    }
+        when(collectionRepository.findById(1)).thenReturn(Optional.of(collection));
+        when(cardService.getCardByCardId(2)).thenReturn(Card.builder().cardID("H-001").holomem("Ina").build());
+        when(cardMapper.toEntity(any(Card.class))).thenReturn(card);
+        when(collectionCardsRepository.findByCollectionId_IdAndCardId_Id(1, 2)).thenReturn(Optional.of(existing));
+        when(collectionCardsRepository.save(existing)).thenReturn(existing);
+
+        CollectionCardResponse response = collectionService.updateCollectionCardByUserId(1, 1, 2, 4);
+
+        assertThat(existing.getCardCount()).isEqualTo(4);
+        assertThat(response.getCardCount()).isEqualTo(4);
+    }
+
+    @Test
+    void updateCollectionCardCreatesNewRow() {
+        CollectionEntity collection = CollectionEntity.builder()
+                .id(1)
+                .ownerId(UserEntity.builder().id(1).build())
+                .build();
+        CardEntity card = sampleCardEntity();
+
+        when(collectionRepository.findById(1)).thenReturn(Optional.of(collection));
+        when(cardService.getCardByCardId(2)).thenReturn(Card.builder().cardID("H-001").holomem("Ina").build());
+        when(cardMapper.toEntity(any(Card.class))).thenReturn(card);
+        when(collectionCardsRepository.findByCollectionId_IdAndCardId_Id(1, 2)).thenReturn(Optional.empty());
+        when(collectionCardsRepository.save(any(CollectionCardsEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        CollectionCardResponse response = collectionService.updateCollectionCardByUserId(1, 1, 2, 2);
+
+        assertThat(response.getCardCount()).isEqualTo(2);
+        assertThat(response.getCardId()).isEqualTo("H-001");
+    }
 
     @Test
     void updateCollectionCardReturnsMinimalResponseWhenAmountZeroAndMissingRow() {
@@ -220,7 +227,7 @@ class CollectionServiceImplTest {
         CollectionCardResponse response = collectionService.updateCollectionCardByUserId(1, 1, 2, 0);
 
         verify(collectionCardsRepository, never()).save(any(CollectionCardsEntity.class));
-        assertThat(response.getCardCount()).isEqualTo(0);
+        assertThat(response.getCardCount()).isZero();
         assertThat(response.getCardId()).isEqualTo("H-001");
     }
 

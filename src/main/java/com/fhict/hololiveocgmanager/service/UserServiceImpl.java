@@ -15,10 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.io.Console;
-import java.util.ArrayList;
-import java.util.List;
-
 @Service
 public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;

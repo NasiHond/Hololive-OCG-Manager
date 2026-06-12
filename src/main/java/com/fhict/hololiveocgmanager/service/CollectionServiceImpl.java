@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.fhict.hololiveocgmanager.repository.CollectionRepository;
+import jakarta.annotation.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -137,8 +138,7 @@ public class CollectionServiceImpl implements CollectionService {
             } else {
                 existing.setCardCount(count);
                 var saved = collectionCardsRepository.save(existing);
-                CardCounts counts = getCardCounts(collection.getId());
-                return toCardResponse(saved, collectionMapper.toDomain(collection, counts.totalCards, counts.totalCount));
+                return toCardResponse(saved, null);
             }
         } else {
             // insert new collection_cards row
@@ -154,8 +154,7 @@ public class CollectionServiceImpl implements CollectionService {
                     .build();
 
             var saved = collectionCardsRepository.save(created);
-            CardCounts counts = getCardCounts(collection.getId());
-            return toCardResponse(saved, collectionMapper.toDomain(collection, counts.totalCards, counts.totalCount));
+            return toCardResponse(saved, null);
         }
     }
 
@@ -184,50 +183,69 @@ public class CollectionServiceImpl implements CollectionService {
                 .build();
     }
 
-    private CollectionCardResponse toCardResponse(CollectionCardsEntity collectionCard, Collection collection) {
-        return CollectionCardResponse.builder()
-                .id(collectionCard.getCardId() != null ? collectionCard.getCardId().getId() : null)
-                .collection(collectionMapper.toResponse(collection))
-                .cardId(collectionCard.getCardId() != null ? collectionCard.getCardId().getCardid() : null)
-                .name(collectionCard.getCardId() != null ? collectionCard.getCardId().getHolomem() : null)
-                .imageUrl(collectionCard.getCardId() != null ? collectionCard.getCardId().getImage() : null)
-                .cardCount(collectionCard.getCardCount())
-                .rarity(collectionCard.getCardId() != null ? collectionCard.getCardId().getRarity() : null)
-                .cardSet(collectionCard.getCardId() != null ? collectionCard.getCardId().getCardset() : null)
-                .cardTypeName(collectionCard.getCardId() != null && collectionCard.getCardId().getCardtype() != null
-                        ? collectionCard.getCardId().getCardtype().getName()
-                        : null)
-                .cardColour(collectionCard.getCardId() != null && collectionCard.getCardId().getCardcolour() != null
-                        ? collectionCard.getCardId().getCardcolour().getColour()
-                        : null)
-                .batonpass(collectionCard.getCardId() != null ? collectionCard.getCardId().getBatonpass() : null)
-                .holomem(collectionCard.getCardId() != null ? collectionCard.getCardId().getHolomem() : null)
-                .bloomLvl(collectionCard.getCardId() != null ? collectionCard.getCardId().getBloomlvl() : null)
-                .hp(collectionCard.getCardId() != null ? collectionCard.getCardId().getHp() : null)
-                .extraEffect(collectionCard.getCardId() != null && collectionCard.getCardId().getExtra() != null
-                        ? collectionCard.getCardId().getExtra().getEffect()
-                        : null)
-                .keyword(collectionCard.getCardId() != null && collectionCard.getCardId().getKeywords() != null && !collectionCard.getCardId().getKeywords().isEmpty()
-                        ? collectionCard.getCardId().getKeywords().stream()
-                                .findFirst()
-                                .map((KeywordEntity k) -> KeywordResponse.builder()
-                                        .id(k.getId())
-                                        .type(k.getType())
-                                        .name(k.getName())
-                                        .effect(k.getEffect())
-                                        .build())
-                                .orElse(null)
-                        : null)
-                .arts(collectionCard.getCardId() != null ? cardMapper.mapArtsToResponse(collectionCard.getCardId()) : List.of())
-                .tags(collectionCard.getCardId() != null && collectionCard.getCardId().getCardtags() != null
-                        ? collectionCard.getCardId().getCardtags().stream()
-                                .map(CardtagEntity::getTagid)
-                                .map(tag -> TagResponse.builder()
-                                        .id(tag.getId())
-                                        .name(tag.getName())
-                                        .build())
-                                .toList()
-                        : List.of())
-                .build();
+    private CollectionCardResponse toCardResponse(CollectionCardsEntity collectionCard, @Nullable Collection collection) {
+        CardEntity card = collectionCard.getCardId();
+        CollectionCardResponse.CollectionCardResponseBuilder builder = CollectionCardResponse.builder()
+                .collection(collection != null ? collectionMapper.toResponse(collection) : null)
+                .cardCount(collectionCard.getCardCount());
+
+        if (card != null) {
+            applyCardFields(builder, card);
+        }
+
+        return builder.build();
+    }
+
+    private void applyCardFields(CollectionCardResponse.CollectionCardResponseBuilder builder, CardEntity card) {
+        builder.id(card.getId())
+                .cardId(card.getCardid())
+                .name(card.getHolomem())
+                .imageUrl(card.getImage())
+                .rarity(card.getRarity())
+                .cardSet(card.getCardset())
+                .cardTypeName(card.getCardtype() != null ? card.getCardtype().getName() : null)
+                .cardColour(card.getCardcolour() != null ? card.getCardcolour().getColour() : null)
+                .batonpass(card.getBatonpass())
+                .holomem(card.getHolomem())
+                .bloomLvl(card.getBloomlvl())
+                .hp(card.getHp())
+                .extraEffect(mapExtraEffect(card))
+                .keyword(mapKeyword(card))
+                .arts(cardMapper.mapArtsToResponse(card))
+                .tags(mapTags(card));
+    }
+
+    private String mapExtraEffect(CardEntity card) {
+        return card.getExtra() != null ? card.getExtra().getEffect() : null;
+    }
+
+    private KeywordResponse mapKeyword(CardEntity card) {
+        if (card.getKeywords() == null || card.getKeywords().isEmpty()) {
+            return null;
+        }
+
+        return card.getKeywords().stream()
+                .findFirst()
+                .map(k -> KeywordResponse.builder()
+                        .id(k.getId())
+                        .type(k.getType())
+                        .name(k.getName())
+                        .effect(k.getEffect())
+                        .build())
+                .orElse(null);
+    }
+
+    private List<TagResponse> mapTags(CardEntity card) {
+        if (card.getCardtags() == null) {
+            return List.of();
+        }
+
+        return card.getCardtags().stream()
+                .map(CardtagEntity::getTagid)
+                .map(tag -> TagResponse.builder()
+                        .id(tag.getId())
+                        .name(tag.getName())
+                        .build())
+                .toList();
     }
 }

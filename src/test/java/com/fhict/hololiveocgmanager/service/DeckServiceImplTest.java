@@ -27,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.List;
 import java.util.Optional;
@@ -60,49 +61,53 @@ class DeckServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private SimpMessagingTemplate messagingTemplate;
+
     @InjectMocks
     private DeckServiceImpl deckService;
 
-//    @Test
-//    void createDeckRejectsMissingTitle() {
-//        CreateDeckRequest request = new CreateDeckRequest();
-//        UserEntity user = userRepository.findAll().getFirst();
-//        request.setVisibility(Visibility.PUBLIC);
-//
-//        assertThatThrownBy(() -> deckService.createDeck(request, user))
-//                .isInstanceOf(IllegalArgumentException.class)
-//                .hasMessage("Deck must have a title.");
-//    }
+    @Test
+    void createDeckRejectsMissingTitle() {
+        CreateDeckRequest request = new CreateDeckRequest();
+        request.setVisibility(Visibility.PUBLIC);
 
-//    @Test
-//    void createDeckReturnsResponse() {
-//        CreateDeckRequest request = new CreateDeckRequest();
-//        request.setTitle("Deck");
-//        request.setVisibility(Visibility.PUBLIC);
-//        request.setDescription("Desc");
-//
-//        DeckEntity entity = DeckEntity.builder()
-//                .id(1)
-//                .creatorId(UserEntity.builder().id(1).build())
-//                .deckName("Deck")
-//                .visibility(Visibility.PUBLIC)
-//                .build();
-//
-//        Deck domain = Deck.builder().id(1).name("Deck").visibility(Visibility.PUBLIC).build();
-//        DeckResponse response = DeckResponse.builder().id(1).title("Deck").visibility(Visibility.PUBLIC).build();
-//
-//        when(deckMapper.toEntity(any(Deck.class))).thenReturn(entity);
-//        when(deckRepository.save(entity)).thenReturn(entity);
-//        when(deckMapper.toDomain(entity)).thenReturn(domain);
-//        when(deckMapper.toResponse(domain)).thenReturn(response);
-//
-//        UserEntity user = userRepository.findAll().getFirst();
-//
-//        DeckResponse result = deckService.createDeck(request, user);
-//
-//        assertThat(result.getId()).isEqualTo(1);
-//        assertThat(result.getTitle()).isEqualTo("Deck");
-//    }
+        UserEntity user = UserEntity.builder().id(1).username("testuser").build();
+
+        assertThatThrownBy(() -> deckService.createDeck(request, user))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Deck must have a title.");
+    }
+
+    @Test
+    void createDeckReturnsResponse() {
+        CreateDeckRequest request = new CreateDeckRequest();
+        request.setTitle("Deck");
+        request.setVisibility(Visibility.PUBLIC);
+        request.setDescription("Desc");
+
+        DeckEntity entity = DeckEntity.builder()
+                .id(1)
+                .creatorId(UserEntity.builder().id(1).build())
+                .deckName("Deck")
+                .visibility(Visibility.PUBLIC)
+                .build();
+
+        Deck domain = Deck.builder().id(1).name("Deck").visibility(Visibility.PUBLIC).build();
+        DeckResponse response = DeckResponse.builder().id(1).title("Deck").visibility(Visibility.PUBLIC).build();
+
+        when(deckMapper.toEntity(any(Deck.class))).thenReturn(entity);
+        when(deckRepository.save(entity)).thenReturn(entity);
+        when(deckMapper.toDomain(entity)).thenReturn(domain);
+        when(deckMapper.toResponse(domain)).thenReturn(response);
+
+        UserEntity user = UserEntity.builder().id(1).username("testuser").build();
+
+        DeckResponse result = deckService.createDeck(request, user);
+
+        assertThat(result.getId()).isEqualTo(1);
+        assertThat(result.getTitle()).isEqualTo("Deck");
+    }
 
     @Test
     void getDeckPageRejectsMissingDeck() {
@@ -201,26 +206,26 @@ class DeckServiceImplTest {
                 .hasMessage("Card count cannot be negative");
     }
 
-//    @Test
-//    void updateDeckCardDeletesWhenCountZero() {
-//        UserEntity user = UserEntity.builder().id(1).build();
-//        DeckEntity deckEntity = DeckEntity.builder().id(1).creatorId(user).build();
-//        CardEntity cardEntity = CardEntity.builder().id(2).build();
-//        DeckCardsEntity deckCards = DeckCardsEntity.builder().id(3).deckId(deckEntity).cardId(cardEntity).cardCount(2).build();
-//
-//        DeckCardUpdateRequest request = DeckCardUpdateRequest.builder().cardId(2).count(0).build();
-//
-//        when(deckRepository.findById(1)).thenReturn(Optional.of(deckEntity));
-//        when(cardRepository.findById(2)).thenReturn(Optional.of(cardEntity));
-//        when(deckCardsRepository.findByDeckId_IdAndCardId_Id(1, 2)).thenReturn(Optional.of(deckCards));
-//        when(cardMapper.toDeckCardResponse(cardEntity, 1, 0))
-//                .thenReturn(DeckCardResponse.builder().deckId(1).count(0).build());
-//
-//        DeckCardResponse response = deckService.updateDeckCard(1, request);
-//
-//        verify(deckCardsRepository).delete(deckCards);
-//        assertThat(response.getCount()).isZero();
-//    }
+    @Test
+    void updateDeckCardDeletesWhenCountZero() {
+        UserEntity user = UserEntity.builder().id(1).build();
+        DeckEntity deckEntity = DeckEntity.builder().id(1).creatorId(user).build();
+        CardEntity cardEntity = CardEntity.builder().id(2).build();
+        DeckCardsEntity deckCards = DeckCardsEntity.builder().id(3).deckId(deckEntity).cardId(cardEntity).cardCount(2).build();
+
+        DeckCardUpdateRequest request = DeckCardUpdateRequest.builder().cardId(2).count(0).build();
+
+        when(deckRepository.findById(1)).thenReturn(Optional.of(deckEntity));
+        when(cardRepository.findById(2)).thenReturn(Optional.of(cardEntity));
+        when(deckCardsRepository.findByDeckId_IdAndCardId_Id(1, 2)).thenReturn(Optional.of(deckCards));
+        when(cardMapper.toDeckCardResponse(cardEntity, 1, 0))
+                .thenReturn(DeckCardResponse.builder().deckId(1).count(0).build());
+
+        DeckCardResponse response = deckService.updateDeckCard(1, request);
+
+        verify(deckCardsRepository).delete(deckCards);
+        assertThat(response.getCount()).isZero();
+    }
 
     @Test
     void updateDeckByUserIdUpdatesFields() {

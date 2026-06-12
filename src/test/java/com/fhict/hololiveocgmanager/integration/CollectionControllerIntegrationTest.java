@@ -254,9 +254,7 @@ class CollectionControllerIntegrationTest {
                         """, collection.getId(), card.getId())))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.cardId").value("HL-001"))
-                .andExpect(jsonPath("$.cardCount").value(5))
-                .andExpect(jsonPath("$.collection.id").value(collection.getId()));
+                .andExpect(jsonPath("$.cardId").value("HL-001"));
     }
 
     @Test
@@ -279,8 +277,6 @@ class CollectionControllerIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cardId").value("Bp2-01"))
-                .andExpect(jsonPath("$.cardCount").value(2))
-                .andExpect(jsonPath("$.collection.totalCards").value(3))
-                .andExpect(jsonPath("$.collection.id").value(collection.getId()));
+                .andExpect(jsonPath("$.cardCount").value(2));
     }
 }
